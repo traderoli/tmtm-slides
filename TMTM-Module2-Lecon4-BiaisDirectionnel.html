@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMTM — Construire son biais directionnel</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0e1a; --bg2: #0f1525; --gold: #f5c518; --white: #ffffff; --gray: #8892a4; --green: #2ecc71; --red: #e84040; --blue: #3a7bd5; }
+  body { background: #1a1a2e; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; gap: 32px; min-height: 100vh; }
+  .nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; background: rgba(10,14,26,0.95); padding: 12px 20px; border-radius: 50px; border: 1px solid rgba(245,197,24,0.3); }
+  .nav button { background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.3); color: var(--gold); padding: 8px 20px; border-radius: 30px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+  .nav button:hover { background: rgba(245,197,24,0.2); }
+  .slide-counter { color: var(--gray); font-size: 13px; display: flex; align-items: center; min-width: 60px; justify-content: center; }
+  .slides-wrapper { width: 100%; max-width: 1280px; }
+  .slide { display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 4px; }
+  .slide.active { display: flex; }
+  .bg-main { background: var(--bg); background-image: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(245,197,24,0.08) 0%, transparent 70%), linear-gradient(135deg, #0a0e1a 0%, #0d1220 100%); }
+  .bg-dark { background: var(--bg2); background-image: linear-gradient(160deg, #0f1525 0%, #080c18 100%); }
+  .bg-accent { background: linear-gradient(135deg, #0a0e1a 0%, #1a1000 100%); }
+  .slide::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(245,197,24,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+  .slide-inner { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 6% 8%; text-align: center; }
+  .slide-inner.left { align-items: flex-start; text-align: left; }
+  .tag { font-size: clamp(10px, 1.1vw, 14px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 2%; opacity: 0.9; }
+  .big-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(40px, 7vw, 90px); color: var(--white); line-height: 0.95; letter-spacing: 0.02em; }
+  .big-title span { color: var(--gold); }
+  .subtitle { font-size: clamp(12px, 1.4vw, 18px); color: var(--gray); margin-top: 2%; font-weight: 300; line-height: 1.6; max-width: 70%; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 5vw, 65px); color: var(--white); line-height: 1; letter-spacing: 0.02em; }
+  .section-title span { color: var(--gold); }
+  .gold-bar { width: 60px; height: 3px; background: var(--gold); margin: 2% 0; }
+  .gold-bar.center { margin: 2% auto; }
+  .bullets { list-style: none; display: flex; flex-direction: column; gap: 1.8%; width: 100%; max-width: 800px; }
+  .bullets li { display: flex; align-items: flex-start; gap: 16px; font-size: clamp(12px, 1.5vw, 19px); color: var(--white); font-weight: 300; line-height: 1.5; }
+  .bullets li::before { content: ''; width: 6px; height: 6px; min-width: 6px; background: var(--gold); border-radius: 50%; margin-top: 0.5em; }
+  .bullets li strong { color: var(--gold); font-weight: 600; }
+  .logo { position: absolute; bottom: 4%; right: 4%; font-family: 'Bebas Neue', sans-serif; font-size: clamp(12px, 1.4vw, 18px); color: rgba(245,197,24,0.4); letter-spacing: 0.1em; z-index: 10; }
+  .quote-block { border-left: 3px solid var(--gold); padding: 2% 4%; background: rgba(245,197,24,0.04); border-radius: 0 8px 8px 0; width: 100%; max-width: 850px; }
+  .quote-text { font-size: clamp(14px, 1.8vw, 22px); color: var(--white); font-style: italic; font-weight: 300; line-height: 1.6; }
+  .solution-box { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.25); border-radius: 10px; padding: 4% 5%; width: 100%; max-width: 860px; }
+  .solution-label { font-size: clamp(9px, 1vw, 12px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .solution-text { font-size: clamp(13px, 1.6vw, 20px); color: var(--white); font-weight: 400; line-height: 1.6; }
+  .solution-text strong { color: var(--gold); font-weight: 600; }
+
+  /* BIAIS CARDS */
+  .biais-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3%; width: 100%; }
+  .biais-card { border-radius: 10px; padding: 5% 4%; display: flex; flex-direction: column; gap: 10px; }
+  .biais-card.haussier { background: rgba(46,204,113,0.06); border: 1px solid rgba(46,204,113,0.3); }
+  .biais-card.baissier { background: rgba(232,64,64,0.06); border: 1px solid rgba(232,64,64,0.3); }
+  .biais-card.neutre { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); }
+  .biais-icon { font-size: clamp(22px, 3vw, 38px); }
+  .biais-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(18px, 2.5vw, 32px); }
+  .biais-card.haussier .biais-title { color: #2ecc71; }
+  .biais-card.baissier .biais-title { color: #e84040; }
+  .biais-card.neutre .biais-title { color: var(--gray); }
+  .biais-desc { font-size: clamp(10px, 1.1vw, 14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+
+  /* COMPARE */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3%; width: 100%; max-width: 900px; }
+  .compare-card { border-radius: 10px; padding: 4% 4%; }
+  .compare-card.bad { background: rgba(232,64,64,0.05); border: 1px solid rgba(232,64,64,0.2); }
+  .compare-card.good { background: rgba(46,204,113,0.05); border: 1px solid rgba(46,204,113,0.2); }
+  .compare-label { font-size: clamp(10px,1.1vw,13px); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .compare-card.bad .compare-label { color: #e84040; }
+  .compare-card.good .compare-label { color: #2ecc71; }
+  .compare-text { font-size: clamp(10px,1.2vw,15px); color: var(--white); font-weight: 300; line-height: 1.6; }
+  .compare-text strong { color: var(--gold); font-weight: 600; }
+
+  /* STEPS */
+  .steps-list { display: flex; flex-direction: column; gap: 2%; width: 100%; max-width: 860px; }
+  .step-item { display: flex; align-items: flex-start; gap: 16px; padding: 2.5% 3%; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
+  .step-n { font-family: 'Bebas Neue', sans-serif; font-size: clamp(20px, 2.5vw, 32px); color: var(--gold); min-width: 32px; line-height: 1; }
+  .step-content .step-title { font-size: clamp(12px, 1.4vw, 17px); color: var(--white); font-weight: 600; margin-bottom: 4px; }
+  .step-content .step-desc { font-size: clamp(10px, 1.1vw, 14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+  .step-content .step-desc strong { color: var(--gold); font-weight: 600; }
+
+  /* PHRASE EXAMPLES */
+  .phrase-list { display: flex; flex-direction: column; gap: 2%; width: 100%; max-width: 860px; }
+  .phrase-item { padding: 2.5% 4%; border-radius: 8px; font-size: clamp(11px,1.3vw,16px); font-weight: 300; line-height: 1.5; font-style: italic; }
+  .phrase-item.haussier { background: rgba(46,204,113,0.06); border-left: 3px solid #2ecc71; color: var(--white); }
+  .phrase-item.baissier { background: rgba(232,64,64,0.06); border-left: 3px solid #e84040; color: var(--white); }
+  .phrase-item.neutre { background: rgba(255,255,255,0.03); border-left: 3px solid var(--gray); color: var(--gray); }
+  .phrase-tag { font-size: clamp(9px,1vw,11px); font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; font-style: normal; }
+  .phrase-item.haussier .phrase-tag { color: #2ecc71; }
+  .phrase-item.baissier .phrase-tag { color: #e84040; }
+  .phrase-item.neutre .phrase-tag { color: var(--gray); }
+
+  /* CHANGE BIAIS */
+  .change-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3%; width: 100%; max-width: 860px; }
+  .change-card { border-radius: 10px; padding: 4% 4%; }
+  .change-card.valid { background: rgba(46,204,113,0.05); border: 1px solid rgba(46,204,113,0.2); }
+  .change-card.invalid { background: rgba(232,64,64,0.05); border: 1px solid rgba(232,64,64,0.2); }
+  .change-label { font-size: clamp(10px,1.1vw,13px); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .change-card.valid .change-label { color: #2ecc71; }
+  .change-card.invalid .change-label { color: #e84040; }
+  .change-item { display: flex; align-items: flex-start; gap: 10px; font-size: clamp(10px,1.2vw,15px); color: var(--white); font-weight: 300; line-height: 1.5; margin-bottom: 8px; }
+  .change-item .ci { min-width: 16px; font-size: clamp(10px,1.1vw,14px); }
+
+  /* THUMBS */
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 1280px; width: 100%; padding-bottom: 80px; }
+  .thumb { width: 80px; height: 45px; border-radius: 3px; border: 2px solid transparent; cursor: pointer; font-size: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; transition: border-color 0.2s; background: #0a0e1a; text-align: center; padding: 4px; }
+  .thumb.active-thumb { border-color: var(--gold); }
+  .thumb:hover { border-color: rgba(245,197,24,0.5); }
+</style>
+</head>
+<body>
+
+<div class="slides-wrapper">
+
+  <!-- SLIDE 1 — Titre -->
+  <div class="slide bg-main active" id="slide-1">
+    <div class="slide-inner">
+      <div class="tag">Module 2 — Leçon 4</div>
+      <div class="big-title">Construire son<br><span>biais directionnel</span></div>
+      <div class="gold-bar center"></div>
+      <div class="subtitle">La question que tu vas te poser chaque matin avant d'ouvrir ton terminal</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 2 — La question -->
+  <div class="slide bg-dark" id="slide-2">
+    <div class="slide-inner">
+      <div class="tag">La question fondamentale</div>
+      <div class="section-title" style="margin-bottom:3%;">Chaque matin,<br><span>avant de trader</span></div>
+      <div class="gold-bar center"></div>
+      <div class="solution-box" style="margin-top:3%;">
+        <div class="solution-label">La question à te poser</div>
+        <div class="solution-text" style="font-size:clamp(15px,2vw,26px); text-align:center;">"Dans quelle direction est-ce que je cherche à trader aujourd'hui — et <strong>pourquoi</strong> ?"</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">La plupart des traders n'y répondent jamais vraiment avant de commencer.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 3 — Définition -->
+  <div class="slide bg-main" id="slide-3">
+    <div class="slide-inner">
+      <div class="tag">Définition</div>
+      <div class="section-title" style="margin-bottom:3%;">Un biais, ce n'est pas<br><span>une prédiction</span></div>
+      <div class="gold-bar center"></div>
+      <div class="quote-block" style="margin-top:3%;">
+        <div class="quote-text">"Sur la base de ce que je vois sur le graphique, je cherche des opportunités dans cette direction — jusqu'à ce que le marché me prouve que j'ai tort."</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">Un biais, c'est une <strong style="color:var(--white);">orientation</strong>. Pas une certitude. Il peut changer si le marché te donne une raison valable.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 4 — Sans vs Avec biais -->
+  <div class="slide bg-dark" id="slide-4">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Pourquoi c'est essentiel</div>
+      <div class="section-title" style="margin-bottom:3%;">Avec vs <span>Sans biais</span></div>
+      <div class="compare-grid">
+        <div class="compare-card bad">
+          <div class="compare-label">✗ Sans biais défini</div>
+          <div class="compare-text">Tu vois un signal haussier → tu analyses. Tu vois un signal baissier → tu analyses aussi. Tu ne sais plus dans quelle direction regarder. Tu prends le trade qui <strong>"te semble le meilleur"</strong> — décision subjective sous pression.</div>
+        </div>
+        <div class="compare-card good">
+          <div class="compare-label">✓ Avec biais défini</div>
+          <div class="compare-text">Ton biais est haussier. Tu <strong>ignores automatiquement</strong> les signaux baissiers. Tu attends uniquement les opportunités longues à tes zones clés. Quand une se présente → tu entres. Simple. Cohérent.</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 5 — Les 3 biais -->
+  <div class="slide bg-main" id="slide-5">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Les 3 biais possibles</div>
+      <div class="section-title" style="margin-bottom:3%;">Dans TMTM, il y en a <span>exactement 3</span></div>
+      <div class="biais-grid">
+        <div class="biais-card haussier">
+          <div class="biais-icon">📈</div>
+          <div class="biais-title">Biais haussier</div>
+          <div class="biais-desc">Tu cherches uniquement des opportunités à l'achat. Tendance haussière ou approche d'un support majeur.</div>
+        </div>
+        <div class="biais-card baissier">
+          <div class="biais-icon">📉</div>
+          <div class="biais-title">Biais baissier</div>
+          <div class="biais-desc">Tu cherches uniquement des opportunités à la vente. Tendance baissière ou approche d'une résistance majeure.</div>
+        </div>
+        <div class="biais-card neutre">
+          <div class="biais-icon">⏸</div>
+          <div class="biais-title">Pas de biais</div>
+          <div class="biais-desc">Le contexte est ambigu. Range sans direction. La meilleure décision — ne rien faire.</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 6 — Pas de biais = force -->
+  <div class="slide bg-dark" id="slide-6">
+    <div class="slide-inner">
+      <div class="tag">Le 3e biais — le plus sous-estimé</div>
+      <div class="section-title" style="margin-bottom:3%;">Ne pas trader<br>est une <span>décision active</span></div>
+      <div class="gold-bar center"></div>
+      <div class="quote-block" style="margin-top:3%;">
+        <div class="quote-text">Ne pas trader n'est pas un échec. C'est reconnaître que les conditions ne sont pas favorables et choisir de protéger son capital. C'est l'une des compétences les plus importantes en trading.</div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 7 — Comment construire -->
+  <div class="slide bg-main" id="slide-7">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:4%;">
+      <div class="tag">Le processus</div>
+      <div class="section-title" style="margin-bottom:3%;">Comment construire son <span>biais — étape par étape</span></div>
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-n">01</div>
+          <div class="step-content">
+            <div class="step-title">Grand timeframe — La tendance</div>
+            <div class="step-desc">Sommets et creux ascendants = <strong>haussier.</strong> Descendants = <strong>baissier.</strong> Horizontal = <strong>range.</strong></div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-n">02</div>
+          <div class="step-content">
+            <div class="step-title">Les zones clés — La position</div>
+            <div class="step-desc">Proche d'un support dans une tendance haussière = biais renforcé. Entre deux zones = <strong>attendre.</strong></div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-n">03</div>
+          <div class="step-content">
+            <div class="step-title">TF intermédiaire — La confirmation</div>
+            <div class="step-desc">La structure confirme-t-elle ton biais ? Si oui → cherche le déclencheur. Si non → <strong>attends.</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 8 — La phrase du biais -->
+  <div class="slide bg-dark" id="slide-8">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">L'outil concret</div>
+      <div class="section-title" style="margin-bottom:3%;">La <span>phrase du biais</span></div>
+      <div class="phrase-list">
+        <div class="phrase-item haussier">
+          <div class="phrase-tag">Biais haussier</div>
+          "Le NAS100 est en tendance haussière sur le daily, approche du support des 18 500 — je cherche une entrée longue à ce niveau."
+        </div>
+        <div class="phrase-item baissier">
+          <div class="phrase-tag">Biais baissier</div>
+          "L'EUR/USD est en tendance baissière sur le 4H, approche de la résistance des 1.0850 — je cherche une entrée courte si un déclencheur se présente."
+        </div>
+        <div class="phrase-item neutre">
+          <div class="phrase-tag">Pas de biais</div>
+          "Le marché est en range sans direction claire — je reste à l'écart aujourd'hui."
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 9 — Règle de la phrase -->
+  <div class="slide bg-accent" id="slide-9">
+    <div class="slide-inner">
+      <div class="tag">La règle absolue</div>
+      <div class="big-title">Une <span>phrase</span><br>pas un paragraphe</div>
+      <div class="gold-bar center"></div>
+      <div class="solution-box" style="margin-top:3%;">
+        <div class="solution-label">Si tu ne peux pas écrire ton biais en une phrase claire</div>
+        <div class="solution-text" style="text-align:center;">Tu n'es <strong>pas prêt à trader.</strong> Ton analyse n'est pas encore assez claire. Retourne sur le graphique et affine.</div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 10 — Quand changer -->
+  <div class="slide bg-dark" id="slide-10">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Quand changer son biais</div>
+      <div class="section-title" style="margin-bottom:3%;">Raisons <span>valables</span> vs invalides</div>
+      <div class="change-grid">
+        <div class="change-card valid">
+          <div class="change-label">✓ Raisons valables</div>
+          <div class="change-item"><span class="ci">✓</span>Une zone clé majeure cassée avec conviction</div>
+          <div class="change-item"><span class="ci">✓</span>Un changement de structure sur le grand timeframe</div>
+          <div class="change-item"><span class="ci">✓</span>La tendance qui faisait des sommets ascendants commence à faire des sommets descendants</div>
+        </div>
+        <div class="change-card invalid">
+          <div class="change-label">✗ Raisons invalides</div>
+          <div class="change-item"><span class="ci">✗</span>Une série de 2 ou 3 trades perdants</div>
+          <div class="change-item"><span class="ci">✗</span>La frustration ou l'impatience</div>
+          <div class="change-item"><span class="ci">✗</span>Quelqu'un sur les réseaux qui dit le contraire</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 11 — Exercice -->
+  <div class="slide bg-main" id="slide-11">
+    <div class="slide-inner">
+      <div class="tag">Exercice pratique — 2 semaines</div>
+      <div class="section-title" style="margin-bottom:3%;">Fais-le <span>chaque jour</span></div>
+      <div class="solution-box">
+        <div class="solution-label">Le défi</div>
+        <ul style="list-style:none; display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+          <li style="display:flex; gap:12px; font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300; line-height:1.5;"><span style="color:var(--gold); font-weight:600; min-width:28px;">01</span>Avant chaque session — analyse top-down sur ton marché</li>
+          <li style="display:flex; gap:12px; font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300; line-height:1.5;"><span style="color:var(--gold); font-weight:600; min-width:28px;">02</span>Écris ta phrase de biais — dans un carnet ou un document</li>
+          <li style="display:flex; gap:12px; font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300; line-height:1.5;"><span style="color:var(--gold); font-weight:600; min-width:28px;">03</span>Après 2 semaines — est-ce que tu as respecté ton biais ? Les fois où tu ne l'as pas respecté t'ont-elles coûté de l'argent ?</li>
+        </ul>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 12 — Clôture Module 2 -->
+  <div class="slide bg-accent" id="slide-12">
+    <div class="slide-inner">
+      <div class="tag">Fin du Module 2</div>
+      <div class="big-title">Tu as maintenant<br>les <span>fondations</span></div>
+      <div class="gold-bar center"></div>
+      <div style="display:flex; gap:3%; width:100%; max-width:800px; margin-top:3%;">
+        <div style="flex:1; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:8px; padding:3% 3%; text-align:center;">
+          <div style="font-size:clamp(10px,1.2vw,15px); color:var(--gold); font-weight:600; margin-bottom:6px;">✓ Leçon 1</div>
+          <div style="font-size:clamp(10px,1.1vw,14px); color:var(--white);">Lire le marché avant de trader</div>
+        </div>
+        <div style="flex:1; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:8px; padding:3% 3%; text-align:center;">
+          <div style="font-size:clamp(10px,1.2vw,15px); color:var(--gold); font-weight:600; margin-bottom:6px;">✓ Leçon 2</div>
+          <div style="font-size:clamp(10px,1.1vw,14px); color:var(--white);">Les timeframes et le contexte</div>
+        </div>
+        <div style="flex:1; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:8px; padding:3% 3%; text-align:center;">
+          <div style="font-size:clamp(10px,1.2vw,15px); color:var(--gold); font-weight:600; margin-bottom:6px;">✓ Leçon 3</div>
+          <div style="font-size:clamp(10px,1.1vw,14px); color:var(--white);">Identifier les zones clés</div>
+        </div>
+        <div style="flex:1; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:8px; padding:3% 3%; text-align:center;">
+          <div style="font-size:clamp(10px,1.2vw,15px); color:var(--gold); font-weight:600; margin-bottom:6px;">✓ Leçon 4</div>
+          <div style="font-size:clamp(10px,1.1vw,14px); color:var(--white);">Construire son biais</div>
+        </div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">→ Module 3 : <strong style="color:var(--white);">Les règles d'exécution</strong></div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+</div>
+
+<!-- THUMBNAILS -->
+<div class="thumbs" id="thumbs"></div>
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="prevSlide()">← Précédent</button>
+  <span class="slide-counter" id="counter">1 / 12</span>
+  <button onclick="nextSlide()">Suivant →</button>
+</div>
+
+<script>
+  let current = 1;
+  const total = 12;
+  const titles = ["Titre","La question","Définition","Sans vs Avec","3 Biais","Pas de biais","Comment construire","La phrase","Règle","Quand changer","Exercice","Fin Module 2"];
+
+  function goTo(n) {
+    document.querySelector('.slide.active')?.classList.remove('active');
+    document.querySelector('.thumb.active-thumb')?.classList.remove('active-thumb');
+    current = n;
+    document.getElementById('slide-' + n).classList.add('active');
+    document.getElementById('thumb-' + n).classList.add('active-thumb');
+    document.getElementById('counter').textContent = n + ' / ' + total;
+    document.getElementById('thumb-' + n).scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }
+
+  function nextSlide() { if (current < total) goTo(current + 1); }
+  function prevSlide() { if (current > 1) goTo(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') prevSlide();
+  });
+
+  const thumbsEl = document.getElementById('thumbs');
+  for (let i = 1; i <= total; i++) {
+    const t = document.createElement('div');
+    t.className = 'thumb' + (i === 1 ? ' active-thumb' : '');
+    t.id = 'thumb-' + i;
+    t.textContent = i + '. ' + titles[i-1];
+    t.onclick = () => goTo(i);
+    thumbsEl.appendChild(t);
+  }
+</script>
+</body>
+</html>

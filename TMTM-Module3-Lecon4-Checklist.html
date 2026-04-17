@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMTM — Ta checklist d'exécution en 1 page</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0e1a; --bg2: #0f1525; --gold: #f5c518; --white: #ffffff; --gray: #8892a4; --green: #2ecc71; --red: #e84040; --blue: #3a7bd5; }
+  body { background: #1a1a2e; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; gap: 32px; min-height: 100vh; }
+  .nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; background: rgba(10,14,26,0.95); padding: 12px 20px; border-radius: 50px; border: 1px solid rgba(245,197,24,0.3); }
+  .nav button { background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.3); color: var(--gold); padding: 8px 20px; border-radius: 30px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+  .nav button:hover { background: rgba(245,197,24,0.2); }
+  .slide-counter { color: var(--gray); font-size: 13px; display: flex; align-items: center; min-width: 60px; justify-content: center; }
+  .slides-wrapper { width: 100%; max-width: 1280px; }
+  .slide { display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 4px; }
+  .slide.active { display: flex; }
+  .bg-main { background: var(--bg); background-image: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(245,197,24,0.08) 0%, transparent 70%), linear-gradient(135deg, #0a0e1a 0%, #0d1220 100%); }
+  .bg-dark { background: var(--bg2); background-image: linear-gradient(160deg, #0f1525 0%, #080c18 100%); }
+  .bg-accent { background: linear-gradient(135deg, #0a0e1a 0%, #1a1000 100%); }
+  .slide::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(245,197,24,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+  .slide-inner { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 6% 8%; text-align: center; }
+  .slide-inner.left { align-items: flex-start; text-align: left; }
+  .tag { font-size: clamp(10px, 1.1vw, 14px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 2%; opacity: 0.9; }
+  .big-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(40px, 7vw, 90px); color: var(--white); line-height: 0.95; letter-spacing: 0.02em; }
+  .big-title span { color: var(--gold); }
+  .subtitle { font-size: clamp(12px, 1.4vw, 18px); color: var(--gray); margin-top: 2%; font-weight: 300; line-height: 1.6; max-width: 70%; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 5vw, 65px); color: var(--white); line-height: 1; letter-spacing: 0.02em; }
+  .section-title span { color: var(--gold); }
+  .gold-bar { width: 60px; height: 3px; background: var(--gold); margin: 2% 0; }
+  .gold-bar.center { margin: 2% auto; }
+  .logo { position: absolute; bottom: 4%; right: 4%; font-family: 'Bebas Neue', sans-serif; font-size: clamp(12px, 1.4vw, 18px); color: rgba(245,197,24,0.4); letter-spacing: 0.1em; z-index: 10; }
+  .quote-block { border-left: 3px solid var(--gold); padding: 2% 4%; background: rgba(245,197,24,0.04); border-radius: 0 8px 8px 0; width: 100%; max-width: 850px; }
+  .quote-text { font-size: clamp(14px, 1.8vw, 22px); color: var(--white); font-style: italic; font-weight: 300; line-height: 1.6; }
+  .solution-box { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.25); border-radius: 10px; padding: 4% 5%; width: 100%; max-width: 860px; }
+  .solution-label { font-size: clamp(9px, 1vw, 12px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .solution-text { font-size: clamp(13px, 1.6vw, 20px); color: var(--white); font-weight: 400; line-height: 1.6; }
+  .solution-text strong { color: var(--gold); font-weight: 600; }
+
+  /* CHECKLIST VISUELLE */
+  .checklist-doc { background: rgba(255,255,255,0.02); border: 1px solid rgba(245,197,24,0.2); border-radius: 12px; padding: 4% 5%; width: 100%; max-width: 780px; }
+  .cl-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3%; padding-bottom: 2%; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .cl-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(16px,2vw,26px); color: var(--gold); letter-spacing: 0.05em; }
+  .cl-meta { font-size: clamp(9px,1vw,13px); color: var(--gray); }
+  .cl-section { margin-bottom: 2%; }
+  .cl-section-title { font-size: clamp(9px,1vw,12px); font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 1%; opacity: 0.7; }
+  .cl-item { display: flex; align-items: center; gap: 10px; padding: 1% 0; border-bottom: 0.5px solid rgba(255,255,255,0.04); }
+  .cl-item:last-child { border-bottom: none; }
+  .cl-check { width: clamp(14px,1.6vw,20px); height: clamp(14px,1.6vw,20px); min-width: clamp(14px,1.6vw,20px); border: 1.5px solid rgba(245,197,24,0.4); border-radius: 3px; display: flex; align-items: center; justify-content: center; }
+  .cl-check.done { background: var(--gold); border-color: var(--gold); }
+  .cl-check.done span { color: #0a0e1a; font-size: clamp(8px,1vw,12px); font-weight: 700; }
+  .cl-text { font-size: clamp(10px,1.2vw,15px); color: var(--white); font-weight: 300; line-height: 1.4; }
+  .cl-text strong { color: var(--gold); font-weight: 600; }
+  .cl-niveaux { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2%; margin-top: 2%; }
+  .cl-niveau { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.15); border-radius: 6px; padding: 2% 3%; text-align: center; }
+  .cl-niveau-label { font-size: clamp(8px,0.9vw,11px); color: var(--gray); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .cl-niveau-val { font-family: 'Bebas Neue', sans-serif; font-size: clamp(14px,1.8vw,22px); color: var(--gold); }
+
+  /* PARTIE CARDS */
+  .partie-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3%; width: 100%; }
+  .partie-card { border-radius: 10px; padding: 5% 4%; display: flex; flex-direction: column; gap: 8px; }
+  .partie-card.p1 { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.25); }
+  .partie-card.p2 { background: rgba(58,123,213,0.06); border: 1px solid rgba(58,123,213,0.25); }
+  .partie-card.p3 { background: rgba(46,204,113,0.06); border: 1px solid rgba(46,204,113,0.25); }
+  .partie-num { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px,3.5vw,44px); line-height: 1; }
+  .partie-card.p1 .partie-num { color: var(--gold); }
+  .partie-card.p2 .partie-num { color: var(--blue); }
+  .partie-card.p3 .partie-num { color: var(--green); }
+  .partie-title { font-size: clamp(13px,1.5vw,19px); color: var(--white); font-weight: 600; }
+  .partie-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+
+  /* QUESTIONS CONTEXT */
+  .q-list { display: flex; flex-direction: column; gap: 1.5%; width: 100%; max-width: 800px; }
+  .q-item { display: flex; align-items: flex-start; gap: 12px; padding: 2% 3%; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
+  .q-icon { font-size: clamp(14px,1.6vw,20px); min-width: 24px; }
+  .q-text { font-size: clamp(11px,1.3vw,16px); color: var(--white); font-weight: 300; line-height: 1.5; }
+  .q-text strong { color: var(--gold); font-weight: 600; }
+
+  /* VALIDATION FINALE */
+  .validation-box { background: rgba(46,204,113,0.06); border: 2px solid rgba(46,204,113,0.3); border-radius: 12px; padding: 5% 6%; width: 100%; max-width: 800px; text-align: center; }
+  .val-question { font-size: clamp(15px,2vw,26px); color: var(--white); font-weight: 400; line-height: 1.5; font-style: italic; margin-bottom: 3%; }
+  .val-oui { background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 8px; padding: 2% 4%; margin-bottom: 1.5%; }
+  .val-non { background: rgba(232,64,64,0.08); border: 1px solid rgba(232,64,64,0.2); border-radius: 8px; padding: 2% 4%; }
+  .val-label { font-size: clamp(10px,1.1vw,14px); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; }
+  .val-oui .val-label { color: #2ecc71; }
+  .val-non .val-label { color: #e84040; }
+  .val-desc { font-size: clamp(11px,1.3vw,16px); color: var(--white); font-weight: 300; }
+
+  /* MODULE BILAN */
+  .bilan-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2.5%; width: 100%; max-width: 860px; }
+  .bilan-card { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.2); border-radius: 10px; padding: 4% 3%; text-align: center; }
+  .bilan-icon { font-size: clamp(20px,2.5vw,32px); margin-bottom: 8px; }
+  .bilan-title { font-size: clamp(12px,1.4vw,17px); color: var(--white); font-weight: 600; margin-bottom: 6px; }
+  .bilan-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.4; }
+
+  /* THUMBS */
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 1280px; width: 100%; padding-bottom: 80px; }
+  .thumb { width: 80px; height: 45px; border-radius: 3px; border: 2px solid transparent; cursor: pointer; font-size: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; transition: border-color 0.2s; background: #0a0e1a; text-align: center; padding: 4px; }
+  .thumb.active-thumb { border-color: var(--gold); }
+  .thumb:hover { border-color: rgba(245,197,24,0.5); }
+</style>
+</head>
+<body>
+
+<div class="slides-wrapper">
+
+  <!-- SLIDE 1 — Titre -->
+  <div class="slide bg-main active" id="slide-1">
+    <div class="slide-inner">
+      <div class="tag">Module 3 — Leçon 4</div>
+      <div class="big-title">Ta <span>checklist</span><br>d'exécution<br>en <span>1 page</span></div>
+      <div class="gold-bar center"></div>
+      <div class="subtitle">Le document que tu vas consulter avant chaque trade — pour toujours</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 2 — Pourquoi une checklist -->
+  <div class="slide bg-dark" id="slide-2">
+    <div class="slide-inner">
+      <div class="tag">Pourquoi une checklist</div>
+      <div class="section-title" style="margin-bottom:3%;">Sous pression,<br>le cerveau <span>oublie</span></div>
+      <div class="gold-bar center"></div>
+      <div class="quote-block" style="margin-top:3%;">
+        <div class="quote-text">Les pilotes d'avion utilisent une checklist avant chaque décollage. Pas parce qu'ils ne savent pas piloter. Parce qu'une étape oubliée sous pression peut être catastrophique. En trading, c'est exactement la même logique.</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">Elle <strong style="color:var(--white);">ralentit le processus</strong> juste assez pour éviter les décisions impulsives.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 3 — 3 parties -->
+  <div class="slide bg-main" id="slide-3">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">La structure</div>
+      <div class="section-title" style="margin-bottom:3%;">3 parties —<span> dans l'ordre</span></div>
+      <div class="partie-grid">
+        <div class="partie-card p1">
+          <div class="partie-num">01</div>
+          <div class="partie-title">Le contexte</div>
+          <div class="partie-desc">Questions sur le grand timeframe avant même de regarder une entrée potentielle.</div>
+        </div>
+        <div class="partie-card p2">
+          <div class="partie-num">02</div>
+          <div class="partie-title">Le trade</div>
+          <div class="partie-desc">Conditions spécifiques — zone, déclencheur, invalidation, objectif, ratio.</div>
+        </div>
+        <div class="partie-card p3">
+          <div class="partie-num">03</div>
+          <div class="partie-title">Validation finale</div>
+          <div class="partie-desc">Une seule question honnête avant d'appuyer sur le bouton.</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 4 — Partie 1 contexte -->
+  <div class="slide bg-dark" id="slide-4">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag" style="color:var(--gold);">Partie 1 — Le contexte</div>
+      <div class="section-title" style="margin-bottom:3%;">3 questions <span>avant tout</span></div>
+      <div class="q-list">
+        <div class="q-item">
+          <div class="q-icon">📊</div>
+          <div class="q-text">Est-ce que j'ai fait mon <strong>analyse top-down</strong> ce matin ? Grand TF, intermédiaire, biais défini ?</div>
+        </div>
+        <div class="q-item">
+          <div class="q-icon">🧭</div>
+          <div class="q-text">Est-ce que mon <strong>biais pour aujourd'hui est clair</strong> ? Haussier, baissier, ou pas de biais ?</div>
+        </div>
+        <div class="q-item">
+          <div class="q-icon">📍</div>
+          <div class="q-text">Est-ce que le prix est à une <strong>zone clé pertinente</strong> — ou en no man's land ?</div>
+        </div>
+      </div>
+      <div style="margin-top:3%; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:8px; padding:3% 4%;">
+        <div style="font-size:clamp(11px,1.3vw,16px); color:var(--gold);">Un non à l'une de ces questions → <strong style="color:var(--white);">tu fermes le terminal. Tu reprends ton analyse.</strong></div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 5 — Partie 2 le trade -->
+  <div class="slide bg-dark" id="slide-5">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag" style="color:var(--blue);">Partie 2 — Le trade</div>
+      <div class="section-title" style="margin-bottom:3%;">5 conditions — <span style="color:var(--blue);">toutes requises</span></div>
+      <div class="q-list">
+        <div class="q-item">
+          <div class="q-icon">↗</div>
+          <div class="q-text">Le trade est-il dans le <strong>sens de mon biais</strong> ?</div>
+        </div>
+        <div class="q-item">
+          <div class="q-icon">📍</div>
+          <div class="q-text">Le prix est-il <strong>exactement à ma zone clé</strong> — pas "proche de", pas "à peu près" ?</div>
+        </div>
+        <div class="q-item">
+          <div class="q-icon">🎯</div>
+          <div class="q-text">Mon <strong>déclencheur spécifique</strong> est-il présent ?</div>
+        </div>
+        <div class="q-item">
+          <div class="q-icon">🛑</div>
+          <div class="q-text">Mon <strong>niveau d'invalidation</strong> est-il identifié avant d'entrer ?</div>
+        </div>
+        <div class="q-item">
+          <div class="q-icon">⚖️</div>
+          <div class="q-text">Mon <strong>ratio risque/récompense</strong> est-il d'au moins 1:1.5 ?</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 6 — Règle absolue -->
+  <div class="slide bg-accent" id="slide-6">
+    <div class="slide-inner">
+      <div class="tag">La règle absolue</div>
+      <div class="big-title">Un seul <span>non</span> —<br>pas de trade</div>
+      <div class="gold-bar center"></div>
+      <div class="subtitle">Pas de négociation. Pas d'"oui mais presque". Non, c'est non. Le prochain trade sera peut-être le bon.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 7 — Validation finale -->
+  <div class="slide bg-dark" id="slide-7">
+    <div class="slide-inner">
+      <div class="tag" style="color:var(--green);">Partie 3 — La validation finale</div>
+      <div class="section-title" style="margin-bottom:3%;">Une seule <span style="color:var(--green);">question honnête</span></div>
+      <div class="validation-box">
+        <div class="val-question">"Est-ce que je prends ce trade parce que mes conditions sont remplies — ou est-ce que je cherche à trader ?"</div>
+        <div class="val-oui">
+          <div class="val-label">✓ Conditions remplies</div>
+          <div class="val-desc">Tu entres. Avec confiance. Tu as fait ton travail.</div>
+        </div>
+        <div class="val-non">
+          <div class="val-label">✗ Je cherche à trader</div>
+          <div class="val-desc">Tu fermes tout et tu attends. Ce n'est pas le bon moment.</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 8 — La checklist complète -->
+  <div class="slide bg-main" id="slide-8">
+    <div class="slide-inner">
+      <div class="tag">La checklist complète</div>
+      <div class="checklist-doc">
+        <div class="cl-header">
+          <div class="cl-title">Checklist d'exécution TMTM</div>
+          <div class="cl-meta">Date : _______ | Marché : _______</div>
+        </div>
+        <div class="cl-section">
+          <div class="cl-section-title">Biais du jour</div>
+          <div style="font-size:clamp(10px,1.1vw,14px); color:var(--gray); font-style:italic; padding: 1% 0;">_____________________________________________</div>
+        </div>
+        <div class="cl-section">
+          <div class="cl-section-title">Contexte</div>
+          <div class="cl-item"><div class="cl-check done"><span>✓</span></div><div class="cl-text">Analyse top-down faite ce matin</div></div>
+          <div class="cl-item"><div class="cl-check done"><span>✓</span></div><div class="cl-text">Biais clair et défini en une phrase</div></div>
+          <div class="cl-item"><div class="cl-check done"><span>✓</span></div><div class="cl-text">Prix à une zone clé pertinente</div></div>
+        </div>
+        <div class="cl-section">
+          <div class="cl-section-title">Le trade</div>
+          <div class="cl-item"><div class="cl-check done"><span>✓</span></div><div class="cl-text">Dans le sens du biais</div></div>
+          <div class="cl-item"><div class="cl-check done"><span>✓</span></div><div class="cl-text">Exactement à ma zone clé</div></div>
+          <div class="cl-item"><div class="cl-check done"><span>✓</span></div><div class="cl-text">Déclencheur spécifique présent</div></div>
+          <div class="cl-item"><div class="cl-check done"><span>✓</span></div><div class="cl-text">Invalidation identifiée | Ratio ≥ 1:1.5</div></div>
+        </div>
+        <div class="cl-niveaux">
+          <div class="cl-niveau"><div class="cl-niveau-label">Entrée</div><div class="cl-niveau-val">_______</div></div>
+          <div class="cl-niveau"><div class="cl-niveau-label">Stop</div><div class="cl-niveau-val">_______</div></div>
+          <div class="cl-niveau"><div class="cl-niveau-label">Objectif</div><div class="cl-niveau-val">_______</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 9 — Document vivant -->
+  <div class="slide bg-dark" id="slide-9">
+    <div class="slide-inner">
+      <div class="tag">Le document vivant</div>
+      <div class="section-title" style="margin-bottom:3%;">Ta checklist <span>évolue</span> avec toi</div>
+      <div class="gold-bar center"></div>
+      <div class="solution-box" style="margin-top:3%;">
+        <div class="solution-label">Les deux règles</div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+          <div style="display:flex; gap:12px; font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300; line-height:1.5;"><span style="color:var(--gold); font-weight:600; min-width:28px;">01</span>Tu ne modifies ta checklist qu'<strong style="color:var(--gold);">à froid</strong> — jamais pendant une session de trading.</div>
+          <div style="display:flex; gap:12px; font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300; line-height:1.5;"><span style="color:var(--gold); font-weight:600; min-width:28px;">02</span>Tu testes chaque modification sur <strong style="color:var(--gold);">au moins 2 à 3 semaines</strong> avant d'en tirer des conclusions.</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 10 — Bilan Module 3 -->
+  <div class="slide bg-main" id="slide-10">
+    <div class="slide-inner">
+      <div class="tag">Fin du Module 3</div>
+      <div class="section-title" style="margin-bottom:3%;">Ce que tu as maintenant<br>que la plupart <span>n'ont pas</span></div>
+      <div class="bilan-grid">
+        <div class="bilan-card">
+          <div class="bilan-icon">✅</div>
+          <div class="bilan-title">Conditions d'entrée</div>
+          <div class="bilan-desc">Précises, vérifiables, objectives. Plus de décisions subjectives.</div>
+        </div>
+        <div class="bilan-card">
+          <div class="bilan-icon">🛑</div>
+          <div class="bilan-title">Niveau d'invalidation</div>
+          <div class="bilan-desc">Défini avant chaque trade. Stop logique, jamais psychologique.</div>
+        </div>
+        <div class="bilan-card">
+          <div class="bilan-icon">📋</div>
+          <div class="bilan-title">Checklist d'exécution</div>
+          <div class="bilan-desc">Une page. Tes règles. À consulter avant chaque trade. Pour toujours.</div>
+        </div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">→ Module 4 : <strong style="color:var(--white);">Gestion du risque</strong></div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+</div>
+
+<div class="thumbs" id="thumbs"></div>
+
+<div class="nav">
+  <button onclick="prevSlide()">← Précédent</button>
+  <span class="slide-counter" id="counter">1 / 10</span>
+  <button onclick="nextSlide()">Suivant →</button>
+</div>
+
+<script>
+  let current = 1;
+  const total = 10;
+  const titles = ["Titre","Pourquoi","3 Parties","Contexte","Le trade","Règle absolue","Validation","Checklist","Document vivant","Bilan M3"];
+
+  function goTo(n) {
+    document.querySelector('.slide.active')?.classList.remove('active');
+    document.querySelector('.thumb.active-thumb')?.classList.remove('active-thumb');
+    current = n;
+    document.getElementById('slide-' + n).classList.add('active');
+    document.getElementById('thumb-' + n).classList.add('active-thumb');
+    document.getElementById('counter').textContent = n + ' / ' + total;
+    document.getElementById('thumb-' + n).scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }
+
+  function nextSlide() { if (current < total) goTo(current + 1); }
+  function prevSlide() { if (current > 1) goTo(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') prevSlide();
+  });
+
+  const thumbsEl = document.getElementById('thumbs');
+  for (let i = 1; i <= total; i++) {
+    const t = document.createElement('div');
+    t.className = 'thumb' + (i === 1 ? ' active-thumb' : '');
+    t.id = 'thumb-' + i;
+    t.textContent = i + '. ' + titles[i-1];
+    t.onclick = () => goTo(i);
+    thumbsEl.appendChild(t);
+  }
+</script>
+</body>
+</html>

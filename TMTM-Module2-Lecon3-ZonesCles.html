@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMTM — Identifier les zones clés</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0a0e1a; --bg2: #0f1525; --gold: #f5c518; --white: #ffffff;
+    --gray: #8892a4; --green: #2ecc71; --red: #e84040;
+  }
+  body { background: #1a1a2e; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; gap: 32px; min-height: 100vh; }
+  .nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; background: rgba(10,14,26,0.95); padding: 12px 20px; border-radius: 50px; border: 1px solid rgba(245,197,24,0.3); }
+  .nav button { background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.3); color: var(--gold); padding: 8px 20px; border-radius: 30px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+  .nav button:hover { background: rgba(245,197,24,0.2); }
+  .slide-counter { color: var(--gray); font-size: 13px; display: flex; align-items: center; min-width: 60px; justify-content: center; }
+  .slides-wrapper { width: 100%; max-width: 1280px; }
+  .slide { display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 4px; }
+  .slide.active { display: flex; }
+  .bg-main { background: var(--bg); background-image: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(245,197,24,0.08) 0%, transparent 70%), linear-gradient(135deg, #0a0e1a 0%, #0d1220 100%); }
+  .bg-dark { background: var(--bg2); background-image: linear-gradient(160deg, #0f1525 0%, #080c18 100%); }
+  .bg-accent { background: linear-gradient(135deg, #0a0e1a 0%, #1a1000 100%); }
+  .slide::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(245,197,24,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+  .slide-inner { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 6% 8%; text-align: center; }
+  .slide-inner.left { align-items: flex-start; text-align: left; }
+  .tag { font-size: clamp(10px, 1.1vw, 14px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 2%; opacity: 0.9; }
+  .big-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(40px, 7vw, 90px); color: var(--white); line-height: 0.95; letter-spacing: 0.02em; }
+  .big-title span { color: var(--gold); }
+  .subtitle { font-size: clamp(12px, 1.4vw, 18px); color: var(--gray); margin-top: 2%; font-weight: 300; line-height: 1.6; max-width: 70%; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 5vw, 65px); color: var(--white); line-height: 1; letter-spacing: 0.02em; }
+  .section-title span { color: var(--gold); }
+  .gold-bar { width: 60px; height: 3px; background: var(--gold); margin: 2% 0; }
+  .gold-bar.center { margin: 2% auto; }
+  .bullets { list-style: none; display: flex; flex-direction: column; gap: 1.8%; width: 100%; max-width: 800px; }
+  .bullets li { display: flex; align-items: flex-start; gap: 16px; font-size: clamp(12px, 1.5vw, 19px); color: var(--white); font-weight: 300; line-height: 1.5; }
+  .bullets li::before { content: ''; width: 6px; height: 6px; min-width: 6px; background: var(--gold); border-radius: 50%; margin-top: 0.5em; }
+  .bullets li strong { color: var(--gold); font-weight: 600; }
+  .logo { position: absolute; bottom: 4%; right: 4%; font-family: 'Bebas Neue', sans-serif; font-size: clamp(12px, 1.4vw, 18px); color: rgba(245,197,24,0.4); letter-spacing: 0.1em; z-index: 10; }
+  .quote-block { border-left: 3px solid var(--gold); padding: 2% 4%; background: rgba(245,197,24,0.04); border-radius: 0 8px 8px 0; width: 100%; max-width: 850px; }
+  .quote-text { font-size: clamp(14px, 1.8vw, 22px); color: var(--white); font-style: italic; font-weight: 300; line-height: 1.6; }
+  .solution-box { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.25); border-radius: 10px; padding: 4% 5%; width: 100%; max-width: 860px; }
+  .solution-label { font-size: clamp(9px, 1vw, 12px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .solution-text { font-size: clamp(13px, 1.6vw, 20px); color: var(--white); font-weight: 400; line-height: 1.6; }
+  .solution-text strong { color: var(--gold); font-weight: 600; }
+
+  /* ZONE TYPES */
+  .zone-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3%; width: 100%; }
+  .zone-card { border-radius: 10px; padding: 5% 4%; display: flex; flex-direction: column; gap: 8px; }
+  .zone-card.support { background: rgba(46,204,113,0.06); border: 1px solid rgba(46,204,113,0.25); }
+  .zone-card.structure { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.25); }
+  .zone-card.valeur { background: rgba(58,123,213,0.06); border: 1px solid rgba(58,123,213,0.25); }
+  .zone-icon { font-size: clamp(20px, 2.5vw, 32px); }
+  .zone-title { font-size: clamp(13px, 1.5vw, 19px); color: var(--white); font-weight: 600; }
+  .zone-desc { font-size: clamp(10px, 1.1vw, 14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+
+  /* CHART VISUAL */
+  .chart-visual { width: 100%; max-width: 800px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 4% 4%; position: relative; }
+  .chart-body { position: relative; height: clamp(120px, 15vw, 200px); }
+  .h-line { position: absolute; width: 100%; height: 2px; display: flex; align-items: center; }
+  .h-line.resistance { background: rgba(232,64,64,0.4); }
+  .h-line.support { background: rgba(46,204,113,0.4); }
+  .h-line-label { font-size: clamp(9px, 1vw, 12px); font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+  .h-line.resistance .h-line-label { background: rgba(232,64,64,0.2); color: #e84040; }
+  .h-line.support .h-line-label { background: rgba(46,204,113,0.2); color: #2ecc71; }
+  .price-zone { position: absolute; width: 100%; border-radius: 4px; }
+  .candle-row { display: flex; gap: 3%; align-items: flex-end; height: 100%; padding: 0 2%; }
+  .candle { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; }
+  .candle-body { width: 60%; border-radius: 2px; }
+  .candle-wick { width: 2px; background: rgba(255,255,255,0.3); }
+
+  /* POLARITE */
+  .polarity-row { display: flex; align-items: center; gap: 3%; width: 100%; max-width: 900px; }
+  .polarity-box { flex: 1; border-radius: 10px; padding: 4% 4%; text-align: center; }
+  .polarity-box.before { background: rgba(46,204,113,0.06); border: 1px solid rgba(46,204,113,0.25); }
+  .polarity-box.after { background: rgba(232,64,64,0.06); border: 1px solid rgba(232,64,64,0.25); }
+  .polarity-label { font-size: clamp(10px, 1.1vw, 14px); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .polarity-box.before .polarity-label { color: #2ecc71; }
+  .polarity-box.after .polarity-label { color: #e84040; }
+  .polarity-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(18px, 2.5vw, 32px); color: var(--white); }
+  .polarity-desc { font-size: clamp(10px, 1.1vw, 14px); color: var(--gray); font-weight: 300; line-height: 1.4; margin-top: 6px; }
+  .polarity-arrow { font-size: clamp(24px, 3vw, 40px); color: var(--gold); }
+
+  /* STEPS */
+  .steps-list { display: flex; flex-direction: column; gap: 2%; width: 100%; max-width: 860px; }
+  .step-item { display: flex; align-items: flex-start; gap: 16px; padding: 2.5% 3%; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
+  .step-n { font-family: 'Bebas Neue', sans-serif; font-size: clamp(20px, 2.5vw, 32px); color: var(--gold); min-width: 32px; line-height: 1; }
+  .step-content .step-title { font-size: clamp(12px, 1.4vw, 17px); color: var(--white); font-weight: 600; margin-bottom: 4px; }
+  .step-content .step-desc { font-size: clamp(10px, 1.1vw, 14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+  .step-content .step-desc strong { color: var(--gold); font-weight: 600; }
+
+  /* NOMAN */
+  .noman-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3%; width: 100%; max-width: 860px; }
+  .noman-card { border-radius: 10px; padding: 4% 4%; }
+  .noman-card.good { background: rgba(46,204,113,0.06); border: 1px solid rgba(46,204,113,0.2); }
+  .noman-card.bad { background: rgba(232,64,64,0.06); border: 1px solid rgba(232,64,64,0.2); }
+  .noman-label { font-size: clamp(10px,1.1vw,13px); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .noman-card.good .noman-label { color: #2ecc71; }
+  .noman-card.bad .noman-label { color: #e84040; }
+  .noman-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(16px,2vw,26px); color: var(--white); margin-bottom: 8px; }
+  .noman-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+
+  /* THUMBS */
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 1280px; width: 100%; padding-bottom: 80px; }
+  .thumb { width: 80px; height: 45px; border-radius: 3px; border: 2px solid transparent; cursor: pointer; font-size: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; transition: border-color 0.2s; background: #0a0e1a; text-align: center; padding: 4px; }
+  .thumb.active-thumb { border-color: var(--gold); }
+  .thumb:hover { border-color: rgba(245,197,24,0.5); }
+</style>
+</head>
+<body>
+
+<div class="slides-wrapper">
+
+  <!-- SLIDE 1 — Titre -->
+  <div class="slide bg-main active" id="slide-1">
+    <div class="slide-inner">
+      <div class="tag">Module 2 — Leçon 3</div>
+      <div class="big-title">Identifier les<br><span>zones clés</span></div>
+      <div class="gold-bar center"></div>
+      <div class="subtitle">Les niveaux où le marché a de la mémoire — et comment les utiliser à ton avantage</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 2 — Définition -->
+  <div class="slide bg-dark" id="slide-2">
+    <div class="slide-inner">
+      <div class="tag">Définition</div>
+      <div class="section-title" style="margin-bottom:3%;">Qu'est-ce qu'une <span>zone clé</span> ?</div>
+      <div class="gold-bar center"></div>
+      <div class="quote-block" style="margin-top:3%;">
+        <div class="quote-text">Un niveau de prix où l'offre et la demande se sont déjà confrontées de façon significative — et où le marché est susceptible de réagir à nouveau.</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">Le marché a de la <strong style="color:var(--white);">mémoire.</strong> Les niveaux importants restent pertinents pendant des semaines, parfois des mois.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 3 — Pourquoi ça marche -->
+  <div class="slide bg-main" id="slide-3">
+    <div class="slide-inner">
+      <div class="tag">Pourquoi ça fonctionne</div>
+      <div class="section-title" style="margin-bottom:3%;">Ce n'est pas <span>de la magie</span></div>
+      <div class="quote-block">
+        <div class="quote-text">Les institutions et les gros opérateurs ont des ordres placés à ces niveaux. Quand le marché y revient, ces ordres se réactivent. C'est de la mémoire de marché — pas de l'analyse mystique.</div>
+      </div>
+      <div style="margin-top:4%; display:flex; gap:3%; width:100%; max-width:750px;">
+        <div style="flex:1; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:8px; padding:3% 4%; text-align:center;">
+          <div style="font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:500;">Sans zones clés</div>
+          <div style="font-size:clamp(10px,1.1vw,14px); color:var(--gray); margin-top:6px;">Tu trades dans le vide</div>
+        </div>
+        <div style="flex:1; background:rgba(46,204,113,0.06); border:1px solid rgba(46,204,113,0.2); border-radius:8px; padding:3% 4%; text-align:center;">
+          <div style="font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:500;">Avec zones clés</div>
+          <div style="font-size:clamp(10px,1.1vw,14px); color:var(--gray); margin-top:6px;">Tu sais exactement où regarder</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 4 — Types de zones -->
+  <div class="slide bg-dark" id="slide-4">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Les 3 types de zones clés</div>
+      <div class="section-title" style="margin-bottom:3%;">Ce que tu dois <span>identifier</span></div>
+      <div class="zone-grid">
+        <div class="zone-card support">
+          <div class="zone-icon">📗</div>
+          <div class="zone-title">Supports & Résistances</div>
+          <div class="zone-desc">Niveaux où le marché a rebondi ou été repoussé plusieurs fois. Plus testé = plus significatif.</div>
+        </div>
+        <div class="zone-card structure">
+          <div class="zone-icon">📊</div>
+          <div class="zone-title">Zones de structure</div>
+          <div class="zone-desc">Points hauts et bas importants. Sommets et creux majeurs sur le grand timeframe.</div>
+        </div>
+        <div class="zone-card valeur">
+          <div class="zone-icon">📘</div>
+          <div class="zone-title">Zones de valeur</div>
+          <div class="zone-desc">Zones où le marché a consolidé longtemps. Représentent un consensus de prix.</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 5 — Support / Résistance -->
+  <div class="slide bg-main" id="slide-5">
+    <div class="slide-inner left" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Type 1 — Supports & Résistances</div>
+      <div class="section-title" style="margin-bottom:3%;">La base de <span>tout</span></div>
+      <ul class="bullets">
+        <li><strong>Support :</strong> niveau sous le prix où les acheteurs sont entrés plusieurs fois — le marché rebondit à la hausse</li>
+        <li><strong>Résistance :</strong> niveau au-dessus du prix où les vendeurs sont entrés plusieurs fois — le marché est repoussé à la baisse</li>
+        <li>Un niveau testé <strong>3 ou 4 fois</strong> est beaucoup plus significatif qu'un niveau testé une seule fois</li>
+        <li>Plus le test est <strong>net et franc</strong>, plus le niveau est important</li>
+      </ul>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 6 — Changement de polarité -->
+  <div class="slide bg-dark" id="slide-6">
+    <div class="slide-inner">
+      <div class="tag">Concept clé</div>
+      <div class="section-title" style="margin-bottom:3%;">Le changement de <span>polarité</span></div>
+      <div class="polarity-row">
+        <div class="polarity-box before">
+          <div class="polarity-label">Avant la cassure</div>
+          <div class="polarity-title">Support</div>
+          <div class="polarity-desc">Le marché rebondit à la hausse à ce niveau</div>
+        </div>
+        <div class="polarity-arrow">→</div>
+        <div style="text-align:center;">
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:clamp(14px,2vw,26px); color:var(--gold);">Cassure franche</div>
+          <div style="font-size:clamp(10px,1.1vw,14px); color:var(--gray); margin-top:4px;">avec conviction</div>
+        </div>
+        <div class="polarity-arrow">→</div>
+        <div class="polarity-box after">
+          <div class="polarity-label">Après la cassure</div>
+          <div class="polarity-title">Résistance</div>
+          <div class="polarity-desc">Ce même niveau repousse maintenant le prix à la baisse</div>
+        </div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">L'inverse est aussi vrai : une résistance cassée devient un support.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 7 — Comment tracer -->
+  <div class="slide bg-main" id="slide-7">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Comment tracer les zones</div>
+      <div class="section-title" style="margin-bottom:3%;">La règle : <span>moins c'est plus</span></div>
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-n">01</div>
+          <div class="step-content">
+            <div class="step-title">Commence sur le grand timeframe</div>
+            <div class="step-desc">Daily ou 4H. Regarde les <strong>6 derniers mois minimum.</strong></div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-n">02</div>
+          <div class="step-content">
+            <div class="step-title">Trace des zones — pas des lignes</div>
+            <div class="step-desc">Le marché réagit à une <strong>zone</strong>, pas à un prix exact au pip près. Un rectangle qui englobe les réactions.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-n">03</div>
+          <div class="step-content">
+            <div class="step-title">Maximum 5 à 7 zones</div>
+            <div class="step-desc">Si tu en as plus, tu en as trop. Garde uniquement les <strong>plus évidentes</strong> — celles que tu vois immédiatement.</div>
+          </div>
+        </div>
+        <div class="step-item">
+          <div class="step-n">04</div>
+          <div class="step-content">
+            <div class="step-title">Descends sur le TF intermédiaire</div>
+            <div class="step-desc">Ajoute 2 à 3 zones supplémentaires importantes à ce niveau.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 8 — Confluence -->
+  <div class="slide bg-dark" id="slide-8">
+    <div class="slide-inner">
+      <div class="tag">Concept avancé</div>
+      <div class="section-title" style="margin-bottom:3%;">La règle de la <span>confluence</span></div>
+      <div class="gold-bar center"></div>
+      <div class="quote-block" style="margin-top:3%;">
+        <div class="quote-text">Une zone clé devient encore plus puissante quand plusieurs éléments coïncident au même niveau. Plus il y a de raisons pour que le marché réagisse à ce niveau, plus les probabilités sont élevées.</div>
+      </div>
+      <div style="margin-top:3%; display:flex; gap:2%; width:100%; max-width:800px;">
+        <div style="flex:1; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.15); border-radius:8px; padding:3%; text-align:center; font-size:clamp(10px,1.2vw,15px); color:var(--white);">Support du daily</div>
+        <div style="color:var(--gold); font-size:clamp(16px,2vw,24px); display:flex; align-items:center;">+</div>
+        <div style="flex:1; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.15); border-radius:8px; padding:3%; text-align:center; font-size:clamp(10px,1.2vw,15px); color:var(--white);">Zone de consolidation</div>
+        <div style="color:var(--gold); font-size:clamp(16px,2vw,24px); display:flex; align-items:center;">+</div>
+        <div style="flex:1; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.15); border-radius:8px; padding:3%; text-align:center; font-size:clamp(10px,1.2vw,15px); color:var(--white);">Point bas majeur</div>
+        <div style="color:var(--gold); font-size:clamp(16px,2vw,24px); display:flex; align-items:center;">=</div>
+        <div style="flex:1; background:rgba(46,204,113,0.06); border:1px solid rgba(46,204,113,0.25); border-radius:8px; padding:3%; text-align:center; font-size:clamp(10px,1.2vw,15px); color:#2ecc71; font-weight:600;">Zone de haute probabilité</div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 9 — Utilisation pratique -->
+  <div class="slide bg-main" id="slide-9">
+    <div class="slide-inner left" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Comment utiliser les zones</div>
+      <div class="section-title" style="margin-bottom:3%;">La logique <span>TMTM</span></div>
+      <ul class="bullets">
+        <li>Tu ne cherches pas un signal <strong>n'importe où</strong> sur le graphique</li>
+        <li>Tu <strong>attends</strong> que le marché arrive à une de tes zones clés</li>
+        <li>Seulement là, tu commences à chercher un <strong>déclencheur d'entrée</strong> sur le petit timeframe</li>
+        <li>Ton stop est <strong>logique</strong> — juste derrière la zone</li>
+        <li>Ton objectif est <strong>clair</strong> — la prochaine zone clé</li>
+      </ul>
+      <div style="margin-top:3%; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:8px; padding:3% 4%;">
+        <div style="font-size:clamp(11px,1.3vw,16px); color:var(--gold);">Cette approche demande de la patience — mais c'est cette patience qui fait la différence.</div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 10 — No Man's Land -->
+  <div class="slide bg-dark" id="slide-10">
+    <div class="slide-inner">
+      <div class="tag">Concept essentiel</div>
+      <div class="section-title" style="margin-bottom:3%;">Le <span>No Man's Land</span></div>
+      <div class="noman-grid">
+        <div class="noman-card good">
+          <div class="noman-label">✓ Bonne situation</div>
+          <div class="noman-title">Prix proche d'une zone</div>
+          <div class="noman-desc">Le marché approche un support ou une résistance. Tu as un contexte clair. Tu peux chercher un setup.</div>
+        </div>
+        <div class="noman-card bad">
+          <div class="noman-label">✗ No Man's Land</div>
+          <div class="noman-title">Prix entre deux zones</div>
+          <div class="noman-desc">Aucun support ni résistance proche. Probabilités neutres. C'est souvent la meilleure raison de ne pas trader.</div>
+        </div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">Savoir <strong style="color:var(--white);">quand ne pas trader</strong> est une compétence sous-estimée. Le no man's land s'évite.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 11 — Exercice -->
+  <div class="slide bg-accent" id="slide-11">
+    <div class="slide-inner">
+      <div class="tag">Exercice pratique</div>
+      <div class="section-title" style="margin-bottom:3%;">Fais-le <span>maintenant</span></div>
+      <div class="solution-box">
+        <div class="solution-label">Sur ta plateforme — ton marché habituel</div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+          <div style="display:flex; gap:12px; font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300; line-height:1.5;"><span style="color:var(--gold); font-weight:600; min-width:28px;">01</span>Daily — Identifie les 5 zones les plus évidentes sur 6 mois. Trace des rectangles.</div>
+          <div style="display:flex; gap:12px; font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300; line-height:1.5;"><span style="color:var(--gold); font-weight:600; min-width:28px;">02</span>4H / 1H — Ajoute 2 à 3 zones supplémentaires importantes.</div>
+          <div style="display:flex; gap:12px; font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300; line-height:1.5;"><span style="color:var(--gold); font-weight:600; min-width:28px;">03</span>Où est le prix maintenant ? Proche d'une zone ou en no man's land ?</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 12 — Clôture -->
+  <div class="slide bg-main" id="slide-12">
+    <div class="slide-inner">
+      <div class="tag">À retenir</div>
+      <div class="big-title">Le marché a<br>de la <span>mémoire</span></div>
+      <div class="gold-bar center"></div>
+      <div class="quote-block" style="margin-top:3%;">
+        <div class="quote-text">Tu n'utilises pas les zones pour prédire. Tu les utilises pour identifier où les probabilités sont en ta faveur. C'est tout.</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">→ Prochaine leçon : <strong style="color:var(--white);">Construire son biais directionnel</strong></div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+</div>
+
+<!-- THUMBNAILS -->
+<div class="thumbs" id="thumbs"></div>
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="prevSlide()">← Précédent</button>
+  <span class="slide-counter" id="counter">1 / 12</span>
+  <button onclick="nextSlide()">Suivant →</button>
+</div>
+
+<script>
+  let current = 1;
+  const total = 12;
+  const titles = ["Titre","Définition","Pourquoi","3 Types","Support/Résist.","Polarité","Comment tracer","Confluence","Utilisation","No Man's Land","Exercice","À retenir"];
+
+  function goTo(n) {
+    document.querySelector('.slide.active')?.classList.remove('active');
+    document.querySelector('.thumb.active-thumb')?.classList.remove('active-thumb');
+    current = n;
+    document.getElementById('slide-' + n).classList.add('active');
+    document.getElementById('thumb-' + n).classList.add('active-thumb');
+    document.getElementById('counter').textContent = n + ' / ' + total;
+    document.getElementById('thumb-' + n).scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }
+
+  function nextSlide() { if (current < total) goTo(current + 1); }
+  function prevSlide() { if (current > 1) goTo(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') prevSlide();
+  });
+
+  const thumbsEl = document.getElementById('thumbs');
+  for (let i = 1; i <= total; i++) {
+    const t = document.createElement('div');
+    t.className = 'thumb' + (i === 1 ? ' active-thumb' : '');
+    t.id = 'thumb-' + i;
+    t.textContent = i + '. ' + titles[i-1];
+    t.onclick = () => goTo(i);
+    thumbsEl.appendChild(t);
+  }
+</script>
+</body>
+</html>

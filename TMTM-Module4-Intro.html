@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMTM — Module 4 Intro — Gestion du risque</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0e1a; --bg2: #0f1525; --gold: #f5c518; --white: #ffffff; --gray: #8892a4; --green: #2ecc71; --red: #e84040; --blue: #3a7bd5; }
+  body { background: #1a1a2e; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; gap: 32px; min-height: 100vh; }
+  .nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; background: rgba(10,14,26,0.95); padding: 12px 20px; border-radius: 50px; border: 1px solid rgba(245,197,24,0.3); }
+  .nav button { background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.3); color: var(--gold); padding: 8px 20px; border-radius: 30px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+  .nav button:hover { background: rgba(245,197,24,0.2); }
+  .slide-counter { color: var(--gray); font-size: 13px; display: flex; align-items: center; min-width: 60px; justify-content: center; }
+  .slides-wrapper { width: 100%; max-width: 1280px; }
+  .slide { display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 4px; }
+  .slide.active { display: flex; }
+  .bg-main { background: var(--bg); background-image: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(245,197,24,0.08) 0%, transparent 70%), linear-gradient(135deg, #0a0e1a 0%, #0d1220 100%); }
+  .bg-dark { background: var(--bg2); background-image: linear-gradient(160deg, #0f1525 0%, #080c18 100%); }
+  .bg-accent { background: linear-gradient(135deg, #0a0e1a 0%, #1a1000 100%); }
+  .slide::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(245,197,24,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+  .slide-inner { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 6% 8%; text-align: center; }
+  .slide-inner.left { align-items: flex-start; text-align: left; }
+  .tag { font-size: clamp(10px, 1.1vw, 14px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 2%; opacity: 0.9; }
+  .big-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(40px, 7vw, 90px); color: var(--white); line-height: 0.95; letter-spacing: 0.02em; }
+  .big-title span { color: var(--gold); }
+  .subtitle { font-size: clamp(12px, 1.4vw, 18px); color: var(--gray); margin-top: 2%; font-weight: 300; line-height: 1.6; max-width: 70%; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 5vw, 65px); color: var(--white); line-height: 1; letter-spacing: 0.02em; }
+  .section-title span { color: var(--gold); }
+  .gold-bar { width: 60px; height: 3px; background: var(--gold); margin: 2% 0; }
+  .gold-bar.center { margin: 2% auto; }
+  .bullets { list-style: none; display: flex; flex-direction: column; gap: 1.8%; width: 100%; max-width: 800px; }
+  .bullets li { display: flex; align-items: flex-start; gap: 16px; font-size: clamp(12px, 1.5vw, 19px); color: var(--white); font-weight: 300; line-height: 1.5; }
+  .bullets li::before { content: ''; width: 6px; height: 6px; min-width: 6px; background: var(--gold); border-radius: 50%; margin-top: 0.5em; }
+  .bullets li strong { color: var(--gold); font-weight: 600; }
+  .logo { position: absolute; bottom: 4%; right: 4%; font-family: 'Bebas Neue', sans-serif; font-size: clamp(12px, 1.4vw, 18px); color: rgba(245,197,24,0.4); letter-spacing: 0.1em; z-index: 10; }
+  .quote-block { border-left: 3px solid var(--gold); padding: 2% 4%; background: rgba(245,197,24,0.04); border-radius: 0 8px 8px 0; width: 100%; max-width: 850px; }
+  .quote-text { font-size: clamp(14px, 1.8vw, 22px); color: var(--white); font-style: italic; font-weight: 300; line-height: 1.6; }
+  .solution-box { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.25); border-radius: 10px; padding: 4% 5%; width: 100%; max-width: 860px; }
+  .solution-label { font-size: clamp(9px, 1vw, 12px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .solution-text { font-size: clamp(13px, 1.6vw, 20px); color: var(--white); font-weight: 400; line-height: 1.6; }
+  .solution-text strong { color: var(--gold); font-weight: 600; }
+
+  /* CONTROLE CARDS */
+  .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3%; width: 100%; max-width: 860px; }
+  .control-card { border-radius: 10px; padding: 4% 4%; }
+  .control-card.non { background: rgba(232,64,64,0.05); border: 1px solid rgba(232,64,64,0.2); }
+  .control-card.oui { background: rgba(46,204,113,0.05); border: 1px solid rgba(46,204,113,0.2); }
+  .control-label { font-size: clamp(10px,1.1vw,13px); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .control-card.non .control-label { color: #e84040; }
+  .control-card.oui .control-label { color: #2ecc71; }
+  .control-item { display: flex; align-items: flex-start; gap: 10px; font-size: clamp(10px,1.2vw,15px); color: var(--white); font-weight: 300; line-height: 1.5; margin-bottom: 8px; }
+
+  /* MODULE CARDS */
+  .module-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5%; width: 100%; max-width: 860px; }
+  .module-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(245,197,24,0.15); border-radius: 10px; padding: 4% 4%; display: flex; gap: 14px; align-items: flex-start; }
+  .module-num { font-family: 'Bebas Neue', sans-serif; font-size: clamp(22px,3vw,38px); color: var(--gold); line-height: 1; min-width: 36px; }
+  .module-label { font-size: clamp(12px,1.4vw,17px); color: var(--white); font-weight: 500; line-height: 1.3; }
+  .module-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.5; margin-top: 4px; }
+
+  /* THUMBS */
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 1280px; width: 100%; padding-bottom: 80px; }
+  .thumb { width: 80px; height: 45px; border-radius: 3px; border: 2px solid transparent; cursor: pointer; font-size: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; transition: border-color 0.2s; background: #0a0e1a; text-align: center; padding: 4px; }
+  .thumb.active-thumb { border-color: var(--gold); }
+  .thumb:hover { border-color: rgba(245,197,24,0.5); }
+</style>
+</head>
+<body>
+
+<div class="slides-wrapper">
+
+  <!-- SLIDE 1 — Titre -->
+  <div class="slide bg-main active" id="slide-1">
+    <div class="slide-inner">
+      <div class="tag">Module 4 — Introduction</div>
+      <div class="big-title">Gestion<br>du <span>risque</span></div>
+      <div class="gold-bar center"></div>
+      <div class="subtitle">La seule variable que tu contrôles vraiment — et pourquoi c'est suffisant</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 2 — La vérité -->
+  <div class="slide bg-dark" id="slide-2">
+    <div class="slide-inner">
+      <div class="tag">La vérité sur le trading</div>
+      <div class="section-title" style="margin-bottom:3%;">Ce que tu ne<br><span>contrôles pas</span></div>
+      <div class="control-grid">
+        <div class="control-card non">
+          <div class="control-label">✗ Hors de ton contrôle</div>
+          <div class="control-item"><span>→</span>Si ton prochain trade va gagner ou perdre</div>
+          <div class="control-item"><span>→</span>Ce que le marché va faire</div>
+          <div class="control-item"><span>→</span>Les nouvelles économiques</div>
+          <div class="control-item"><span>→</span>Les mouvements des grandes institutions</div>
+        </div>
+        <div class="control-card oui">
+          <div class="control-label">✓ Dans ton contrôle</div>
+          <div style="display:flex; align-items:center; justify-content:center; height:80%; padding-top:10%;">
+            <div style="font-family:'Bebas Neue',sans-serif; font-size:clamp(22px,3vw,38px); color:#2ecc71; line-height:1.2; text-align:center;">Le risque que tu prends<br>sur chaque trade</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 3 — Pourquoi c'est énorme -->
+  <div class="slide bg-main" id="slide-3">
+    <div class="slide-inner">
+      <div class="tag">Pourquoi c'est suffisant</div>
+      <div class="section-title" style="margin-bottom:3%;">Contrôler le risque —<br><span>c'est énorme</span></div>
+      <div class="gold-bar center"></div>
+      <div class="quote-block" style="margin-top:3%;">
+        <div class="quote-text">Un trader qui ne gère pas son risque peut avoir la meilleure stratégie du monde et quand même brûler son compte. Un trader qui gère bien son risque peut avoir une stratégie moyenne et rester profitable sur le long terme.</div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 4 — Ce que ce n'est pas -->
+  <div class="slide bg-dark" id="slide-4">
+    <div class="slide-inner left" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Ce que la gestion du risque n'est PAS</div>
+      <div class="section-title" style="margin-bottom:3%;">3 idées <span>reçues</span></div>
+      <ul class="bullets">
+        <li><strong>Pas "trader petit pour être prudent" :</strong> des tailles trop petites t'empêchent de construire un capital sérieux. C'est de la peur, pas de la gestion.</li>
+        <li><strong>Pas "éviter les pertes" :</strong> les pertes font partie du trading. L'objectif c'est que tes pertes ne mettent pas en danger ta capacité à continuer.</li>
+        <li><strong>Pas juste "placer un stop et espérer" :</strong> le stop loss est un outil. La gestion du risque est un système complet.</li>
+      </ul>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 5 — Ce qu'on va construire -->
+  <div class="slide bg-main" id="slide-5">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Ce module en 4 leçons</div>
+      <div class="section-title" style="margin-bottom:3%;">Ce qu'on va <span>construire</span></div>
+      <div class="module-grid">
+        <div class="module-card">
+          <div class="module-num">01</div>
+          <div>
+            <div class="module-label">Calculer sa taille de position</div>
+            <div class="module-desc">Selon ton capital et la distance jusqu'au stop. Jamais au hasard.</div>
+          </div>
+        </div>
+        <div class="module-card">
+          <div class="module-num">02</div>
+          <div>
+            <div class="module-label">Gérer le drawdown</div>
+            <div class="module-desc">Comprendre les périodes de pertes et comment les traverser.</div>
+          </div>
+        </div>
+        <div class="module-card">
+          <div class="module-num">03</div>
+          <div>
+            <div class="module-label">Tes règles de protection</div>
+            <div class="module-desc">Limites concrètes qui te protègent contre toi-même.</div>
+          </div>
+        </div>
+        <div class="module-card">
+          <div class="module-num">04</div>
+          <div>
+            <div class="module-label">Adapter ton risque</div>
+            <div class="module-desc">Le risque approprié varie selon les circonstances.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 6 — Le filet de sécurité -->
+  <div class="slide bg-dark" id="slide-6">
+    <div class="slide-inner">
+      <div class="tag">Le lien avec les modules précédents</div>
+      <div class="section-title" style="margin-bottom:3%;">Le <span>filet de sécurité</span><br>qui rend tout possible</div>
+      <div class="gold-bar center"></div>
+      <div style="display:flex; gap:3%; width:100%; max-width:860px; margin-top:3%;">
+        <div style="flex:1; background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.2); border-radius:8px; padding:4%; text-align:center;">
+          <div style="font-size:clamp(10px,1.2vw,15px); color:var(--gold); font-weight:600; margin-bottom:8px;">Module 3</div>
+          <div style="font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300;">Conditions d'entrée → trades de qualité</div>
+        </div>
+        <div style="color:var(--gold); font-size:clamp(18px,2.5vw,30px); display:flex; align-items:center;">+</div>
+        <div style="flex:1; background:rgba(46,204,113,0.06); border:1px solid rgba(46,204,113,0.2); border-radius:8px; padding:4%; text-align:center;">
+          <div style="font-size:clamp(10px,1.2vw,15px); color:#2ecc71; font-weight:600; margin-bottom:8px;">Module 4</div>
+          <div style="font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300;">Gestion du risque → survivre aux périodes difficiles</div>
+        </div>
+        <div style="color:var(--gold); font-size:clamp(18px,2.5vw,30px); display:flex; align-items:center;">=</div>
+        <div style="flex:1; background:rgba(245,197,24,0.1); border:2px solid rgba(245,197,24,0.4); border-radius:8px; padding:4%; text-align:center;">
+          <div style="font-size:clamp(10px,1.2vw,15px); color:var(--gold); font-weight:600; margin-bottom:8px;">Résultat</div>
+          <div style="font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300;">Progression cohérente sur le long terme</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 7 — La philosophie -->
+  <div class="slide bg-accent" id="slide-7">
+    <div class="slide-inner">
+      <div class="tag">Le changement de perspective</div>
+      <div class="big-title">Protéger<br>avant de <span>maximiser</span></div>
+      <div class="gold-bar center"></div>
+      <div class="subtitle">Beaucoup de traders cherchent à maximiser leurs gains. Les traders qui durent cherchent d'abord à protéger leur capital. Ce n'est pas la même chose.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+</div>
+
+<div class="thumbs" id="thumbs"></div>
+
+<div class="nav">
+  <button onclick="prevSlide()">← Précédent</button>
+  <span class="slide-counter" id="counter">1 / 7</span>
+  <button onclick="nextSlide()">Suivant →</button>
+</div>
+
+<script>
+  let current = 1;
+  const total = 7;
+  const titles = ["Titre","Pas de contrôle","Pourquoi énorme","Ce que ce n'est pas","4 Leçons","Filet sécurité","Philosophie"];
+
+  function goTo(n) {
+    document.querySelector('.slide.active')?.classList.remove('active');
+    document.querySelector('.thumb.active-thumb')?.classList.remove('active-thumb');
+    current = n;
+    document.getElementById('slide-' + n).classList.add('active');
+    document.getElementById('thumb-' + n).classList.add('active-thumb');
+    document.getElementById('counter').textContent = n + ' / ' + total;
+    document.getElementById('thumb-' + n).scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }
+
+  function nextSlide() { if (current < total) goTo(current + 1); }
+  function prevSlide() { if (current > 1) goTo(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') prevSlide();
+  });
+
+  const thumbsEl = document.getElementById('thumbs');
+  for (let i = 1; i <= total; i++) {
+    const t = document.createElement('div');
+    t.className = 'thumb' + (i === 1 ? ' active-thumb' : '');
+    t.id = 'thumb-' + i;
+    t.textContent = i + '. ' + titles[i-1];
+    t.onclick = () => goTo(i);
+    thumbsEl.appendChild(t);
+  }
+</script>
+</body>
+</html>

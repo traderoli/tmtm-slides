@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMTM — Tes règles de protection</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0e1a; --bg2: #0f1525; --gold: #f5c518; --white: #ffffff; --gray: #8892a4; --green: #2ecc71; --red: #e84040; --blue: #3a7bd5; }
+  body { background: #1a1a2e; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; gap: 32px; min-height: 100vh; }
+  .nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; background: rgba(10,14,26,0.95); padding: 12px 20px; border-radius: 50px; border: 1px solid rgba(245,197,24,0.3); }
+  .nav button { background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.3); color: var(--gold); padding: 8px 20px; border-radius: 30px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+  .nav button:hover { background: rgba(245,197,24,0.2); }
+  .slide-counter { color: var(--gray); font-size: 13px; display: flex; align-items: center; min-width: 60px; justify-content: center; }
+  .slides-wrapper { width: 100%; max-width: 1280px; }
+  .slide { display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 4px; }
+  .slide.active { display: flex; }
+  .bg-main { background: var(--bg); background-image: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(245,197,24,0.08) 0%, transparent 70%), linear-gradient(135deg, #0a0e1a 0%, #0d1220 100%); }
+  .bg-dark { background: var(--bg2); background-image: linear-gradient(160deg, #0f1525 0%, #080c18 100%); }
+  .bg-accent { background: linear-gradient(135deg, #0a0e1a 0%, #1a1000 100%); }
+  .slide::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(245,197,24,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+  .slide-inner { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 6% 8%; text-align: center; }
+  .slide-inner.left { align-items: flex-start; text-align: left; }
+  .tag { font-size: clamp(10px, 1.1vw, 14px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 2%; opacity: 0.9; }
+  .big-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(40px, 7vw, 90px); color: var(--white); line-height: 0.95; letter-spacing: 0.02em; }
+  .big-title span { color: var(--gold); }
+  .subtitle { font-size: clamp(12px, 1.4vw, 18px); color: var(--gray); margin-top: 2%; font-weight: 300; line-height: 1.6; max-width: 70%; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 5vw, 65px); color: var(--white); line-height: 1; letter-spacing: 0.02em; }
+  .section-title span { color: var(--gold); }
+  .gold-bar { width: 60px; height: 3px; background: var(--gold); margin: 2% 0; }
+  .gold-bar.center { margin: 2% auto; }
+  .bullets { list-style: none; display: flex; flex-direction: column; gap: 1.8%; width: 100%; max-width: 800px; }
+  .bullets li { display: flex; align-items: flex-start; gap: 16px; font-size: clamp(12px, 1.5vw, 19px); color: var(--white); font-weight: 300; line-height: 1.5; }
+  .bullets li::before { content: ''; width: 6px; height: 6px; min-width: 6px; background: var(--gold); border-radius: 50%; margin-top: 0.5em; }
+  .bullets li strong { color: var(--gold); font-weight: 600; }
+  .logo { position: absolute; bottom: 4%; right: 4%; font-family: 'Bebas Neue', sans-serif; font-size: clamp(12px, 1.4vw, 18px); color: rgba(245,197,24,0.4); letter-spacing: 0.1em; z-index: 10; }
+  .quote-block { border-left: 3px solid var(--gold); padding: 2% 4%; background: rgba(245,197,24,0.04); border-radius: 0 8px 8px 0; width: 100%; max-width: 850px; }
+  .quote-text { font-size: clamp(14px, 1.8vw, 22px); color: var(--white); font-style: italic; font-weight: 300; line-height: 1.6; }
+  .solution-box { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.25); border-radius: 10px; padding: 4% 5%; width: 100%; max-width: 860px; }
+  .solution-label { font-size: clamp(9px, 1vw, 12px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .solution-text { font-size: clamp(13px, 1.6vw, 20px); color: var(--white); font-weight: 400; line-height: 1.6; }
+  .solution-text strong { color: var(--gold); font-weight: 600; }
+
+  /* RÈGLES GRID */
+  .regles-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3%; width: 100%; }
+  .regle-card { border-radius: 10px; padding: 5% 4%; display: flex; flex-direction: column; gap: 10px; }
+  .regle-card.r1 { background: rgba(232,64,64,0.06); border: 1px solid rgba(232,64,64,0.3); }
+  .regle-card.r2 { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.3); }
+  .regle-card.r3 { background: rgba(46,204,113,0.06); border: 1px solid rgba(46,204,113,0.3); }
+  .regle-icon { font-size: clamp(20px,2.5vw,32px); }
+  .regle-title { font-size: clamp(13px,1.5vw,19px); color: var(--white); font-weight: 600; }
+  .regle-val { font-family: 'Bebas Neue', sans-serif; font-size: clamp(22px,3vw,38px); line-height: 1; }
+  .regle-card.r1 .regle-val { color: #e84040; }
+  .regle-card.r2 .regle-val { color: var(--gold); }
+  .regle-card.r3 .regle-val { color: #2ecc71; }
+  .regle-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+
+  /* TILT */
+  .tilt-box { background: rgba(232,64,64,0.05); border: 1px solid rgba(232,64,64,0.2); border-radius: 10px; padding: 4% 5%; width: 100%; max-width: 860px; }
+  .tilt-label { font-size: clamp(9px,1vw,12px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: #e84040; margin-bottom: 8px; }
+  .tilt-text { font-size: clamp(13px,1.6vw,20px); color: var(--white); font-weight: 400; line-height: 1.6; }
+
+  /* LIMITE JOURNALIERE */
+  .limite-visual { display: flex; flex-direction: column; gap: 2%; width: 100%; max-width: 800px; }
+  .limite-row { display: flex; align-items: center; gap: 16px; padding: 2.5% 3%; border-radius: 8px; }
+  .limite-row.ok { background: rgba(46,204,113,0.05); border: 1px solid rgba(46,204,113,0.15); }
+  .limite-row.warn { background: rgba(245,197,24,0.05); border: 1px solid rgba(245,197,24,0.15); }
+  .limite-row.stop { background: rgba(232,64,64,0.08); border: 2px solid rgba(232,64,64,0.3); }
+  .limite-icon { font-size: clamp(16px,2vw,24px); min-width: 28px; }
+  .limite-text { font-size: clamp(11px,1.3vw,16px); color: var(--white); font-weight: 300; line-height: 1.4; }
+  .limite-text strong { font-weight: 600; }
+  .limite-row.ok .limite-text strong { color: #2ecc71; }
+  .limite-row.warn .limite-text strong { color: var(--gold); }
+  .limite-row.stop .limite-text strong { color: #e84040; }
+
+  /* MISE EN PLACE */
+  .mise-list { display: flex; flex-direction: column; gap: 2%; width: 100%; max-width: 860px; }
+  .mise-item { display: flex; align-items: flex-start; gap: 16px; padding: 2.5% 3%; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
+  .mise-n { font-family: 'Bebas Neue', sans-serif; font-size: clamp(20px,2.5vw,32px); color: var(--gold); min-width: 32px; line-height: 1; }
+  .mise-title { font-size: clamp(12px,1.4vw,17px); color: var(--white); font-weight: 600; margin-bottom: 4px; }
+  .mise-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+  .mise-desc strong { color: var(--gold); font-weight: 600; }
+
+  /* BILAN MODULE */
+  .bilan-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2.5%; width: 100%; max-width: 860px; }
+  .bilan-card { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.2); border-radius: 10px; padding: 4% 3%; text-align: center; }
+  .bilan-icon { font-size: clamp(20px,2.5vw,32px); margin-bottom: 8px; }
+  .bilan-title { font-size: clamp(12px,1.4vw,17px); color: var(--white); font-weight: 600; margin-bottom: 6px; }
+  .bilan-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.4; }
+
+  /* THUMBS */
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 1280px; width: 100%; padding-bottom: 80px; }
+  .thumb { width: 80px; height: 45px; border-radius: 3px; border: 2px solid transparent; cursor: pointer; font-size: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; transition: border-color 0.2s; background: #0a0e1a; text-align: center; padding: 4px; }
+  .thumb.active-thumb { border-color: var(--gold); }
+  .thumb:hover { border-color: rgba(245,197,24,0.5); }
+</style>
+</head>
+<body>
+
+<div class="slides-wrapper">
+
+  <!-- SLIDE 1 — Titre -->
+  <div class="slide bg-main active" id="slide-1">
+    <div class="slide-inner">
+      <div class="tag">Module 4 — Leçon 4</div>
+      <div class="big-title">Tes règles<br>de <span>protection</span></div>
+      <div class="gold-bar center"></div>
+      <div class="subtitle">Des limites concrètes qui te protègent contre toi-même dans les mauvaises journées</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 2 — Pourquoi nécessaire -->
+  <div class="slide bg-dark" id="slide-2">
+    <div class="slide-inner">
+      <div class="tag">Pourquoi ces règles sont nécessaires</div>
+      <div class="section-title" style="margin-bottom:3%;">Dans certaines conditions<br>tu n'es <span>pas en état</span> de trader</div>
+      <div class="gold-bar center"></div>
+      <div class="tilt-box" style="margin-top:3%;">
+        <div class="tilt-label">Le tilt — emprunté au poker</div>
+        <div class="tilt-text">Quand les émotions prennent le dessus sur la raison et que tu commences à prendre des décisions irrationnelles. Après des pertes, tu cherches à récupérer. Tu prends des trades que tu n'aurais jamais pris normalement.</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">Les règles de protection <strong style="color:var(--white);">ne dépendent pas de ta volonté dans le moment</strong> — parce que dans le moment, ta volonté est compromise.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 3 — Les 3 règles -->
+  <div class="slide bg-main" id="slide-3">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Tes 3 règles de protection</div>
+      <div class="section-title" style="margin-bottom:3%;">Simples, <span>concrètes, non-négociables</span></div>
+      <div class="regles-grid">
+        <div class="regle-card r1">
+          <div class="regle-icon">🛑</div>
+          <div class="regle-title">Limite journalière</div>
+          <div class="regle-val">2 — 3%</div>
+          <div class="regle-desc">Pertes max par jour. Atteint → stop immédiat pour la journée.</div>
+        </div>
+        <div class="regle-card r2">
+          <div class="regle-icon">📅</div>
+          <div class="regle-title">Limite hebdomadaire</div>
+          <div class="regle-val">5 — 6%</div>
+          <div class="regle-desc">Pertes max par semaine. Atteint → arrêt total jusqu'à lundi.</div>
+        </div>
+        <div class="regle-card r3">
+          <div class="regle-icon">🎯</div>
+          <div class="regle-title">Cible journalière</div>
+          <div class="regle-val">+ 2%</div>
+          <div class="regle-desc">Profit cible. Atteint → réduire ou stopper pour éviter de redonner.</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 4 — Limite journalière détail -->
+  <div class="slide bg-dark" id="slide-4">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Règle 1 — Limite journalière</div>
+      <div class="section-title" style="margin-bottom:3%;">Après <span>2-3 pertes</span> — on arrête</div>
+      <div class="limite-visual">
+        <div class="limite-row ok">
+          <div class="limite-icon">✓</div>
+          <div class="limite-text"><strong>Trade 1 perdant</strong> — normal, ça arrive. Tu continues avec ton processus.</div>
+        </div>
+        <div class="limite-row warn">
+          <div class="limite-icon">⚠️</div>
+          <div class="limite-text"><strong>Trade 2 perdant</strong> — alerte. Tu ralentis. Tu revérifies ton analyse et ton état d'esprit.</div>
+        </div>
+        <div class="limite-row stop">
+          <div class="limite-icon">🛑</div>
+          <div class="limite-text"><strong>Limite atteinte</strong> — tu fermes tout. Tu quittes ton bureau. Tu t'arrêtes pour la journée. Sans exception. Sans "encore un".</div>
+        </div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">2-3 pertes consécutives = signal que le marché ou ta psychologie n'est pas favorable aujourd'hui.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 5 — Limite hebdo -->
+  <div class="slide bg-main" id="slide-5">
+    <div class="slide-inner">
+      <div class="tag">Règle 2 — Limite hebdomadaire</div>
+      <div class="section-title" style="margin-bottom:3%;">La pause <span>forcée</span></div>
+      <div class="gold-bar center"></div>
+      <div class="solution-box" style="margin-top:3%;">
+        <div class="solution-label">Le principe</div>
+        <div class="solution-text">Si tu atteins ta limite journalière plusieurs fois dans la même semaine, tu as besoin de recul sur une période plus longue. <strong>5-6% de drawdown hebdomadaire</strong> = arrêt total jusqu'à lundi.</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">Cette pause forcée te donne le temps d'analyser ce qui ne va pas <strong style="color:var(--white);">sans la pression</strong> d'être en mode trading actif.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 6 — Breakeven -->
+  <div class="slide bg-dark" id="slide-6">
+    <div class="slide-inner">
+      <div class="tag">Règle 3 — La cible journalière</div>
+      <div class="section-title" style="margin-bottom:3%;">Protéger aussi<br>les <span>bonnes journées</span></div>
+      <div class="gold-bar center"></div>
+      <div class="quote-block" style="margin-top:3%;">
+        <div class="quote-text">Les meilleures journées sont souvent suivies de prises de risques excessives. Tu te sens invincible. Tu vois des setups partout. Et tu redonnes une partie de tes gains.</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">Avoir une cible journalière (+2%) te garde <strong style="color:var(--white);">ancré et discipliné</strong> même dans les bonnes périodes.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 7 — Comment les respecter -->
+  <div class="slide bg-main" id="slide-7">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Comment rendre ces règles incontournables</div>
+      <div class="section-title" style="margin-bottom:3%;">Créer des <span>frictions</span></div>
+      <div class="mise-list">
+        <div class="mise-item">
+          <div class="mise-n">01</div>
+          <div>
+            <div class="mise-title">Écris-les</div>
+            <div class="mise-desc">Dans ton document de règles, ta checklist, un post-it à côté de ton écran. <strong>Les règles écrites sont plus faciles à respecter</strong> que les règles dans ta tête.</div>
+          </div>
+        </div>
+        <div class="mise-item">
+          <div class="mise-n">02</div>
+          <div>
+            <div class="mise-title">Crée des frictions physiques</div>
+            <div class="mise-desc">Quand tu atteins ta limite — <strong>ferme la plateforme, déconnecte-toi, quitte ton bureau.</strong> Plus il est difficile de reprendre, mieux c'est.</div>
+          </div>
+        </div>
+        <div class="mise-item">
+          <div class="mise-n">03</div>
+          <div>
+            <div class="mise-title">Tiens un journal</div>
+            <div class="mise-desc">Note chaque fois que tu respectes une règle — et chaque fois que tu ne la respectes pas. <strong>L'impact sur tes résultats sera évident</strong> après quelques semaines.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 8 — Les excuses classiques -->
+  <div class="slide bg-dark" id="slide-8">
+    <div class="slide-inner">
+      <div class="tag">Les excuses que ton cerveau va trouver</div>
+      <div class="section-title" style="margin-bottom:3%;">Tu vas les <span>reconnaître</span></div>
+      <div class="gold-bar center"></div>
+      <div style="display:flex; flex-direction:column; gap:2%; width:100%; max-width:750px; margin-top:3%;">
+        <div style="background:rgba(232,64,64,0.06); border:1px solid rgba(232,64,64,0.15); border-radius:8px; padding:2.5% 4%; font-size:clamp(12px,1.4vw,17px); color:var(--white); font-style:italic; font-weight:300;">"C'est juste un trade de plus."</div>
+        <div style="background:rgba(232,64,64,0.06); border:1px solid rgba(232,64,64,0.15); border-radius:8px; padding:2.5% 4%; font-size:clamp(12px,1.4vw,17px); color:var(--white); font-style:italic; font-weight:300;">"Je suis sûr que celui-là va marcher."</div>
+        <div style="background:rgba(232,64,64,0.06); border:1px solid rgba(232,64,64,0.15); border-radius:8px; padding:2.5% 4%; font-size:clamp(12px,1.4vw,17px); color:var(--white); font-style:italic; font-weight:300;">"Je peux récupérer mes pertes maintenant."</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(12px,1.4vw,17px); color:var(--gold); font-weight:600;">Ces pensées sont le signal que tu dois t'arrêter — pas continuer.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 9 — Bilan Module 4 -->
+  <div class="slide bg-main" id="slide-9">
+    <div class="slide-inner">
+      <div class="tag">Fin du Module 4</div>
+      <div class="section-title" style="margin-bottom:3%;">Ton système de<br><span>gestion du risque complet</span></div>
+      <div class="bilan-grid">
+        <div class="bilan-card">
+          <div class="bilan-icon">📐</div>
+          <div class="bilan-title">Taille de position</div>
+          <div class="bilan-desc">Calculée mécaniquement. Toujours le même % de risque.</div>
+        </div>
+        <div class="bilan-card">
+          <div class="bilan-icon">📉</div>
+          <div class="bilan-title">Gestion du drawdown</div>
+          <div class="bilan-desc">Diagnostiquer, réduire, continuer. Un plan défini à l'avance.</div>
+        </div>
+        <div class="bilan-card">
+          <div class="bilan-icon">🛡️</div>
+          <div class="bilan-title">Règles de protection</div>
+          <div class="bilan-desc">Limites journalières et hebdomadaires. Des garde-fous automatiques.</div>
+        </div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">→ Module 5 : <strong style="color:var(--white);">Routine de trading</strong></div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+</div>
+
+<div class="thumbs" id="thumbs"></div>
+
+<div class="nav">
+  <button onclick="prevSlide()">← Précédent</button>
+  <span class="slide-counter" id="counter">1 / 9</span>
+  <button onclick="nextSlide()">Suivant →</button>
+</div>
+
+<script>
+  let current = 1;
+  const total = 9;
+  const titles = ["Titre","Pourquoi","3 Règles","Limite journalière","Limite hebdo","Breakeven","Comment respecter","Les excuses","Bilan M4"];
+
+  function goTo(n) {
+    document.querySelector('.slide.active')?.classList.remove('active');
+    document.querySelector('.thumb.active-thumb')?.classList.remove('active-thumb');
+    current = n;
+    document.getElementById('slide-' + n).classList.add('active');
+    document.getElementById('thumb-' + n).classList.add('active-thumb');
+    document.getElementById('counter').textContent = n + ' / ' + total;
+    document.getElementById('thumb-' + n).scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }
+
+  function nextSlide() { if (current < total) goTo(current + 1); }
+  function prevSlide() { if (current > 1) goTo(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') prevSlide();
+  });
+
+  const thumbsEl = document.getElementById('thumbs');
+  for (let i = 1; i <= total; i++) {
+    const t = document.createElement('div');
+    t.className = 'thumb' + (i === 1 ? ' active-thumb' : '');
+    t.id = 'thumb-' + i;
+    t.textContent = i + '. ' + titles[i-1];
+    t.onclick = () => goTo(i);
+    thumbsEl.appendChild(t);
+  }
+</script>
+</body>
+</html>

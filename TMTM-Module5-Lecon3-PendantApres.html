@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMTM — Routine pendant et après la séance</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root { --bg: #0a0e1a; --bg2: #0f1525; --gold: #f5c518; --white: #ffffff; --gray: #8892a4; --green: #2ecc71; --red: #e84040; --blue: #3a7bd5; }
+  body { background: #1a1a2e; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; gap: 32px; min-height: 100vh; }
+  .nav { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; background: rgba(10,14,26,0.95); padding: 12px 20px; border-radius: 50px; border: 1px solid rgba(245,197,24,0.3); }
+  .nav button { background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.3); color: var(--gold); padding: 8px 20px; border-radius: 30px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+  .nav button:hover { background: rgba(245,197,24,0.2); }
+  .slide-counter { color: var(--gray); font-size: 13px; display: flex; align-items: center; min-width: 60px; justify-content: center; }
+  .slides-wrapper { width: 100%; max-width: 1280px; }
+  .slide { display: none; width: 100%; aspect-ratio: 16/9; position: relative; overflow: hidden; border-radius: 4px; }
+  .slide.active { display: flex; }
+  .bg-main { background: var(--bg); background-image: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(245,197,24,0.08) 0%, transparent 70%), linear-gradient(135deg, #0a0e1a 0%, #0d1220 100%); }
+  .bg-dark { background: var(--bg2); background-image: linear-gradient(160deg, #0f1525 0%, #080c18 100%); }
+  .bg-accent { background: linear-gradient(135deg, #0a0e1a 0%, #1a1000 100%); }
+  .slide::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(245,197,24,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(245,197,24,0.03) 1px, transparent 1px); background-size: 60px 60px; pointer-events: none; }
+  .slide-inner { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 6% 8%; text-align: center; }
+  .slide-inner.left { align-items: flex-start; text-align: left; }
+  .tag { font-size: clamp(10px, 1.1vw, 14px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 2%; opacity: 0.9; }
+  .big-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(40px, 7vw, 90px); color: var(--white); line-height: 0.95; letter-spacing: 0.02em; }
+  .big-title span { color: var(--gold); }
+  .subtitle { font-size: clamp(12px, 1.4vw, 18px); color: var(--gray); margin-top: 2%; font-weight: 300; line-height: 1.6; max-width: 70%; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(28px, 5vw, 65px); color: var(--white); line-height: 1; letter-spacing: 0.02em; }
+  .section-title span { color: var(--gold); }
+  .gold-bar { width: 60px; height: 3px; background: var(--gold); margin: 2% 0; }
+  .gold-bar.center { margin: 2% auto; }
+  .bullets { list-style: none; display: flex; flex-direction: column; gap: 1.8%; width: 100%; max-width: 800px; }
+  .bullets li { display: flex; align-items: flex-start; gap: 16px; font-size: clamp(12px, 1.5vw, 19px); color: var(--white); font-weight: 300; line-height: 1.5; }
+  .bullets li::before { content: ''; width: 6px; height: 6px; min-width: 6px; background: var(--gold); border-radius: 50%; margin-top: 0.5em; }
+  .bullets li strong { color: var(--gold); font-weight: 600; }
+  .logo { position: absolute; bottom: 4%; right: 4%; font-family: 'Bebas Neue', sans-serif; font-size: clamp(12px, 1.4vw, 18px); color: rgba(245,197,24,0.4); letter-spacing: 0.1em; z-index: 10; }
+  .quote-block { border-left: 3px solid var(--gold); padding: 2% 4%; background: rgba(245,197,24,0.04); border-radius: 0 8px 8px 0; width: 100%; max-width: 850px; }
+  .quote-text { font-size: clamp(14px, 1.8vw, 22px); color: var(--white); font-style: italic; font-weight: 300; line-height: 1.6; }
+  .solution-box { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.25); border-radius: 10px; padding: 4% 5%; width: 100%; max-width: 860px; }
+  .solution-label { font-size: clamp(9px, 1vw, 12px); font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 8px; }
+  .solution-text { font-size: clamp(13px, 1.6vw, 20px); color: var(--white); font-weight: 400; line-height: 1.6; }
+  .solution-text strong { color: var(--gold); font-weight: 600; }
+
+  /* PRINCIPES */
+  .principe-list { display: flex; flex-direction: column; gap: 2%; width: 100%; max-width: 860px; }
+  .principe-item { display: flex; align-items: flex-start; gap: 16px; padding: 2.5% 3%; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
+  .principe-n { font-family: 'Bebas Neue', sans-serif; font-size: clamp(20px,2.5vw,32px); color: var(--gold); min-width: 32px; line-height: 1; }
+  .principe-title { font-size: clamp(12px,1.4vw,17px); color: var(--white); font-weight: 600; margin-bottom: 4px; }
+  .principe-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+  .principe-desc strong { color: var(--gold); font-weight: 600; }
+
+  /* ATTENTE VS CHERCHER */
+  .avsc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3%; width: 100%; max-width: 860px; }
+  .avsc-card { border-radius: 10px; padding: 4% 4%; }
+  .avsc-card.chercher { background: rgba(232,64,64,0.05); border: 1px solid rgba(232,64,64,0.2); }
+  .avsc-card.attendre { background: rgba(46,204,113,0.05); border: 1px solid rgba(46,204,113,0.2); }
+  .avsc-label { font-size: clamp(10px,1.1vw,13px); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+  .avsc-card.chercher .avsc-label { color: #e84040; }
+  .avsc-card.attendre .avsc-label { color: #2ecc71; }
+  .avsc-text { font-size: clamp(11px,1.3vw,16px); color: var(--white); font-weight: 300; line-height: 1.6; }
+  .avsc-text strong { color: var(--gold); font-weight: 600; }
+
+  /* SIGNAUX ALARME */
+  .alarme-list { display: flex; flex-direction: column; gap: 2%; width: 100%; max-width: 860px; }
+  .alarme-item { display: flex; align-items: flex-start; gap: 16px; background: rgba(232,64,64,0.05); border: 1px solid rgba(232,64,64,0.15); border-radius: 8px; padding: 3% 3%; }
+  .alarme-icon { font-size: clamp(16px,2vw,24px); min-width: 28px; }
+  .alarme-title { font-size: clamp(12px,1.4vw,17px); color: var(--white); font-weight: 600; margin-bottom: 4px; }
+  .alarme-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+
+  /* POST ÉTAPES */
+  .post-etapes { display: flex; flex-direction: column; gap: 2%; width: 100%; max-width: 860px; }
+  .post-item { display: flex; align-items: flex-start; gap: 16px; padding: 2.5% 3%; border-radius: 8px; }
+  .post-item.p1 { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.2); }
+  .post-item.p2 { background: rgba(58,123,213,0.06); border: 1px solid rgba(58,123,213,0.2); }
+  .post-item.p3 { background: rgba(46,204,113,0.06); border: 1px solid rgba(46,204,113,0.2); }
+  .post-n { font-family: 'Bebas Neue', sans-serif; font-size: clamp(20px,2.5vw,32px); min-width: 32px; line-height: 1; }
+  .post-item.p1 .post-n { color: var(--gold); }
+  .post-item.p2 .post-n { color: var(--blue); }
+  .post-item.p3 .post-n { color: var(--green); }
+  .post-title { font-size: clamp(12px,1.4vw,17px); color: var(--white); font-weight: 600; margin-bottom: 4px; }
+  .post-time { font-size: clamp(9px,1vw,12px); font-weight: 600; margin-bottom: 4px; }
+  .post-item.p1 .post-time { color: var(--gold); }
+  .post-item.p2 .post-time { color: var(--blue); }
+  .post-item.p3 .post-time { color: var(--green); }
+  .post-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.5; }
+  .post-desc strong { color: var(--gold); font-weight: 600; }
+
+  /* JOURNÉE COMPLÈTE */
+  .journee-list { display: flex; flex-direction: column; gap: 1.5%; width: 100%; max-width: 860px; }
+  .journee-item { display: flex; align-items: flex-start; gap: 16px; padding: 2% 3%; border-radius: 8px; }
+  .journee-item.pre { background: rgba(245,197,24,0.05); border-left: 3px solid rgba(245,197,24,0.4); }
+  .journee-item.seance { background: rgba(58,123,213,0.05); border-left: 3px solid rgba(58,123,213,0.4); }
+  .journee-item.trade { background: rgba(46,204,113,0.05); border-left: 3px solid rgba(46,204,113,0.4); }
+  .journee-item.post { background: rgba(255,255,255,0.02); border-left: 3px solid rgba(255,255,255,0.15); }
+  .journee-heure { font-size: clamp(10px,1.1vw,14px); font-weight: 600; min-width: 60px; }
+  .journee-item.pre .journee-heure { color: var(--gold); }
+  .journee-item.seance .journee-heure { color: var(--blue); }
+  .journee-item.trade .journee-heure { color: var(--green); }
+  .journee-item.post .journee-heure { color: var(--gray); }
+  .journee-text { font-size: clamp(11px,1.3vw,16px); color: var(--white); font-weight: 300; line-height: 1.4; }
+  .journee-text strong { color: var(--gold); font-weight: 600; }
+
+  /* BILAN MODULE */
+  .bilan-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2.5%; width: 100%; max-width: 860px; }
+  .bilan-card { background: rgba(245,197,24,0.06); border: 1px solid rgba(245,197,24,0.2); border-radius: 10px; padding: 4% 3%; text-align: center; }
+  .bilan-icon { font-size: clamp(20px,2.5vw,32px); margin-bottom: 8px; }
+  .bilan-title { font-size: clamp(12px,1.4vw,17px); color: var(--white); font-weight: 600; margin-bottom: 6px; }
+  .bilan-desc { font-size: clamp(10px,1.1vw,14px); color: var(--gray); font-weight: 300; line-height: 1.4; }
+
+  /* THUMBS */
+  .thumbs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 1280px; width: 100%; padding-bottom: 80px; }
+  .thumb { width: 80px; height: 45px; border-radius: 3px; border: 2px solid transparent; cursor: pointer; font-size: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; transition: border-color 0.2s; background: #0a0e1a; text-align: center; padding: 4px; }
+  .thumb.active-thumb { border-color: var(--gold); }
+  .thumb:hover { border-color: rgba(245,197,24,0.5); }
+</style>
+</head>
+<body>
+
+<div class="slides-wrapper">
+
+  <!-- SLIDE 1 — Titre -->
+  <div class="slide bg-main active" id="slide-1">
+    <div class="slide-inner">
+      <div class="tag">Module 5 — Leçon 3</div>
+      <div class="big-title">Pendant et<br><span>après la séance</span></div>
+      <div class="gold-bar center"></div>
+      <div class="subtitle">Maintenir sa discipline en temps réel — et progresser grâce au bilan</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 2 — Attendre vs chercher -->
+  <div class="slide bg-dark" id="slide-2">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Principe 1 — Pendant la séance</div>
+      <div class="section-title" style="margin-bottom:3%;"><span>Attendre</span> — pas chercher</div>
+      <div class="avsc-grid">
+        <div class="avsc-card chercher">
+          <div class="avsc-label">✗ Chercher</div>
+          <div class="avsc-text">Tu scrolles les graphiques, tu zoomes sur différents timeframes, tu cherches quelque chose à prendre. Ce comportement crée de <strong>l'impulsivité.</strong></div>
+        </div>
+        <div class="avsc-card attendre">
+          <div class="avsc-label">✓ Attendre</div>
+          <div class="avsc-text">Tu as ton plan. Tu sais exactement ce que tu cherches. Soit le marché vient à toi, soit il n'y a <strong>pas de trade aujourd'hui.</strong></div>
+        </div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">La séance d'un trader discipliné ressemble souvent à <strong style="color:var(--white);">beaucoup d'attente ponctuée de rares moments d'action.</strong></div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 3 — 4 principes -->
+  <div class="slide bg-main" id="slide-3">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:4%;">
+      <div class="tag">Pendant la séance — les 4 principes</div>
+      <div class="section-title" style="margin-bottom:3%;">Des comportements<br><span>à maintenir</span></div>
+      <div class="principe-list">
+        <div class="principe-item">
+          <div class="principe-n">01</div>
+          <div><div class="principe-title">Attendre, pas chercher</div><div class="principe-desc">Observer si le marché vient à ta zone — pas l'inverse.</div></div>
+        </div>
+        <div class="principe-item">
+          <div class="principe-n">02</div>
+          <div><div class="principe-title">Consulter la checklist avant chaque trade</div><div class="principe-desc">Toutes les cases cochées → tu entres. Une manquante → <strong>tu passes.</strong></div></div>
+        </div>
+        <div class="principe-item">
+          <div class="principe-n">03</div>
+          <div><div class="principe-title">Ne pas regarder les positions toutes les 5 min</div><div class="principe-desc">Stop et objectif définis → <strong>fais confiance à ton analyse.</strong> Surveille les changements majeurs de contexte.</div></div>
+        </div>
+        <div class="principe-item">
+          <div class="principe-n">04</div>
+          <div><div class="principe-title">Respecter les règles de protection</div><div class="principe-desc">Limite journalière atteinte → <strong>ferme tout. Sans exception.</strong></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 4 — Signaux d'alarme -->
+  <div class="slide bg-dark" id="slide-4">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Pendant la séance — signaux d'alarme</div>
+      <div class="section-title" style="margin-bottom:3%;">Apprends à les <span>reconnaître</span></div>
+      <div class="alarme-list">
+        <div class="alarme-item">
+          <div class="alarme-icon">⚠️</div>
+          <div>
+            <div class="alarme-title">L'impatience croissante</div>
+            <div class="alarme-desc">"Rien ne se passe" = signal d'alerte. L'ennui mène à l'impulsivité. Pas de setup = pas de trade. C'est parfaitement acceptable.</div>
+          </div>
+        </div>
+        <div class="alarme-item">
+          <div class="alarme-icon">⚠️</div>
+          <div>
+            <div class="alarme-title">Le besoin de récupérer</div>
+            <div class="alarme-desc">Après une perte, tu veux "récupérer" rapidement. Arrête-toi. Prends 10 minutes. Ce sentiment est l'une des causes les plus fréquentes de trades impulsifs.</div>
+          </div>
+        </div>
+        <div class="alarme-item">
+          <div class="alarme-icon">⚠️</div>
+          <div>
+            <div class="alarme-title">La tentation de modifier le plan</div>
+            <div class="alarme-desc">"J'entre un peu avant pour avoir un meilleur prix." Résiste. Ton plan a été fait à froid. Stick to the plan.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 5 — Routine post-séance -->
+  <div class="slide bg-main" id="slide-5">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Après la séance</div>
+      <div class="section-title" style="margin-bottom:3%;">3 étapes —<span> 10 à 15 minutes</span></div>
+      <div class="post-etapes">
+        <div class="post-item p1">
+          <div class="post-n">01</div>
+          <div>
+            <div class="post-time">5 MIN</div>
+            <div class="post-title">Bilan rapide des trades</div>
+            <div class="post-desc">Résultat, processus respecté ?, <strong>une observation.</strong> 5 lignes max par trade.</div>
+          </div>
+        </div>
+        <div class="post-item p2">
+          <div class="post-n">02</div>
+          <div>
+            <div class="post-time">3 MIN</div>
+            <div class="post-title">La note du jour</div>
+            <div class="post-desc">1-2 phrases sur <strong>ton comportement</strong> — pas les résultats. Plan respecté ? Moments d'impulsivité ? Ce qui t'a perturbé ?</div>
+          </div>
+        </div>
+        <div class="post-item p3">
+          <div class="post-n">03</div>
+          <div>
+            <div class="post-time">2 MIN</div>
+            <div class="post-title">Préparer demain</div>
+            <div class="post-desc">Calendrier économique de demain. <strong>Contexte de départ</strong> pour la routine pré-marché.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 6 — Pourquoi le bilan -->
+  <div class="slide bg-dark" id="slide-6">
+    <div class="slide-inner">
+      <div class="tag">Pourquoi le bilan est essentiel</div>
+      <div class="section-title" style="margin-bottom:3%;">Tes erreurs deviennent<br><span>des données</span></div>
+      <div class="gold-bar center"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:3%; width:100%; max-width:860px; margin-top:3%;">
+        <div style="background:rgba(232,64,64,0.05); border:1px solid rgba(232,64,64,0.2); border-radius:10px; padding:4%;">
+          <div style="font-size:clamp(10px,1.1vw,13px); color:#e84040; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;">Sans bilan</div>
+          <div style="font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300; line-height:1.6;">Les erreurs restent des impressions vagues. Les mêmes erreurs se répètent semaine après semaine sans comprendre pourquoi.</div>
+        </div>
+        <div style="background:rgba(46,204,113,0.05); border:1px solid rgba(46,204,113,0.2); border-radius:10px; padding:4%;">
+          <div style="font-size:clamp(10px,1.1vw,13px); color:#2ecc71; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; margin-bottom:10px;">Avec bilan</div>
+          <div style="font-size:clamp(11px,1.3vw,16px); color:var(--white); font-weight:300; line-height:1.6;">Les erreurs deviennent des données. Tu identifies des patterns. Tu apportes des corrections précises. Tu progresses de façon continue.</div>
+        </div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);"><strong style="color:var(--white);">10 minutes par jour.</strong> Sur plusieurs mois — une base de connaissance irremplaçable.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 7 — Exemple journée complète -->
+  <div class="slide bg-main" id="slide-7">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:4%;">
+      <div class="tag">Exemple — Une journée complète</div>
+      <div class="section-title" style="margin-bottom:3%;">La routine <span>en action</span></div>
+      <div class="journee-list">
+        <div class="journee-item pre">
+          <div class="journee-heure">7h30</div>
+          <div class="journee-text"><strong>Routine pré-marché</strong> — 25 min. Calendrier, analyse, biais, plan.</div>
+        </div>
+        <div class="journee-item seance">
+          <div class="journee-heure">8h-10h</div>
+          <div class="journee-text">Attente. Le marché n'est pas encore à ta zone. Tu observes. Tu n'interviens pas.</div>
+        </div>
+        <div class="journee-item trade">
+          <div class="journee-heure">10h15</div>
+          <div class="journee-text"><strong>Setup présent.</strong> Checklist cochée. Entrée long. Stop et objectif placés. Tu attends.</div>
+        </div>
+        <div class="journee-item trade">
+          <div class="journee-heure">11h45</div>
+          <div class="journee-text"><strong>Objectif atteint.</strong> Tu sors. Note rapide dans le journal. Cible journalière atteinte → tu fermes.</div>
+        </div>
+        <div class="journee-item post">
+          <div class="journee-heure">12h10</div>
+          <div class="journee-text"><strong>Routine post-séance</strong> — 10 min. Bilan du trade, note du jour, calendrier de demain.</div>
+        </div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 8 — Bilan Module 5 -->
+  <div class="slide bg-accent" id="slide-8">
+    <div class="slide-inner">
+      <div class="tag">Fin du Module 5</div>
+      <div class="section-title" style="margin-bottom:3%;">Ta routine<br><span>complète</span></div>
+      <div class="bilan-grid" style="margin-top:3%;">
+        <div class="bilan-card">
+          <div class="bilan-icon">🌅</div>
+          <div class="bilan-title">Pré-marché</div>
+          <div class="bilan-desc">25 min. Analyse, biais, plan. Le bloc le plus important.</div>
+        </div>
+        <div class="bilan-card">
+          <div class="bilan-icon">⏳</div>
+          <div class="bilan-title">Pendant la séance</div>
+          <div class="bilan-desc">Attendre, checklist, discipline. Exécuter le plan.</div>
+        </div>
+        <div class="bilan-card">
+          <div class="bilan-icon">📝</div>
+          <div class="bilan-title">Post-séance</div>
+          <div class="bilan-desc">10 min. Bilan, note, demain. Le bloc qui permet la progression.</div>
+        </div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">→ Module 6 : <strong style="color:var(--white);">Analyse et progression</strong></div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+</div>
+
+<div class="thumbs" id="thumbs"></div>
+
+<div class="nav">
+  <button onclick="prevSlide()">← Précédent</button>
+  <span class="slide-counter" id="counter">1 / 8</span>
+  <button onclick="nextSlide()">Suivant →</button>
+</div>
+
+<script>
+  let current = 1;
+  const total = 8;
+  const titles = ["Titre","Attendre vs Chercher","4 Principes","Signaux alarme","Post-séance","Pourquoi bilan","Journée complète","Bilan M5"];
+
+  function goTo(n) {
+    document.querySelector('.slide.active')?.classList.remove('active');
+    document.querySelector('.thumb.active-thumb')?.classList.remove('active-thumb');
+    current = n;
+    document.getElementById('slide-' + n).classList.add('active');
+    document.getElementById('thumb-' + n).classList.add('active-thumb');
+    document.getElementById('counter').textContent = n + ' / ' + total;
+    document.getElementById('thumb-' + n).scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }
+
+  function nextSlide() { if (current < total) goTo(current + 1); }
+  function prevSlide() { if (current > 1) goTo(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') prevSlide();
+  });
+
+  const thumbsEl = document.getElementById('thumbs');
+  for (let i = 1; i <= total; i++) {
+    const t = document.createElement('div');
+    t.className = 'thumb' + (i === 1 ? ' active-thumb' : '');
+    t.id = 'thumb-' + i;
+    t.textContent = i + '. ' + titles[i-1];
+    t.onclick = () => goTo(i);
+    thumbsEl.appendChild(t);
+  }
+</script>
+</body>
+</html>

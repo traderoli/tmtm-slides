@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMTM — Les 3 ennemis de la cohérence</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #0f1525;
+    --gold: #f5c518;
+    --gold2: #e8a800;
+    --white: #ffffff;
+    --gray: #8892a4;
+    --red: #e84040;
+    --slide-w: 1280px;
+    --slide-h: 720px;
+  }
+
+  body {
+    background: #1a1a2e;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    gap: 32px;
+    min-height: 100vh;
+  }
+
+  .nav {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 100;
+    background: rgba(10,14,26,0.95);
+    padding: 12px 20px;
+    border-radius: 50px;
+    border: 1px solid rgba(245,197,24,0.3);
+  }
+
+  .nav button {
+    background: rgba(245,197,24,0.1);
+    border: 1px solid rgba(245,197,24,0.3);
+    color: var(--gold);
+    padding: 8px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .nav button:hover { background: rgba(245,197,24,0.2); }
+
+  .slide-counter {
+    color: var(--gray);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    min-width: 60px;
+    justify-content: center;
+  }
+
+  .slides-wrapper {
+    width: 100%;
+    max-width: var(--slide-w);
+  }
+
+  .slide {
+    display: none;
+    width: 100%;
+    aspect-ratio: 16/9;
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
+  }
+
+  .slide.active { display: flex; }
+
+  /* ─── SLIDE BACKGROUNDS ─── */
+  .bg-main {
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 120%, rgba(245,197,24,0.08) 0%, transparent 70%),
+      linear-gradient(135deg, #0a0e1a 0%, #0d1220 100%);
+  }
+
+  .bg-dark {
+    background: var(--bg2);
+    background-image: linear-gradient(160deg, #0f1525 0%, #080c18 100%);
+  }
+
+  .bg-accent {
+    background: linear-gradient(135deg, #0a0e1a 0%, #1a1000 100%);
+  }
+
+  /* ─── GRID OVERLAY ─── */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(245,197,24,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,197,24,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+  }
+
+  /* ─── COMMON ELEMENTS ─── */
+  .slide-inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 6% 8%;
+    text-align: center;
+  }
+
+  .slide-inner.left {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .tag {
+    font-size: clamp(10px, 1.1vw, 14px);
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2%;
+    opacity: 0.9;
+  }
+
+  .big-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(40px, 7vw, 90px);
+    color: var(--white);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+  }
+
+  .big-title span { color: var(--gold); }
+
+  .subtitle {
+    font-size: clamp(12px, 1.4vw, 18px);
+    color: var(--gray);
+    margin-top: 2%;
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 70%;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(28px, 5vw, 65px);
+    color: var(--white);
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  .section-title span { color: var(--gold); }
+
+  .ennemi-number {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(80px, 14vw, 180px);
+    color: rgba(245,197,24,0.08);
+    position: absolute;
+    right: 5%;
+    top: 50%;
+    transform: translateY(-50%);
+    line-height: 1;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .gold-bar {
+    width: 60px;
+    height: 3px;
+    background: var(--gold);
+    margin: 2% 0;
+  }
+
+  .gold-bar.center { margin: 2% auto; }
+
+  /* ─── BULLETS ─── */
+  .bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.8%;
+    width: 100%;
+    max-width: 800px;
+  }
+
+  .bullets li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: clamp(12px, 1.5vw, 19px);
+    color: var(--white);
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  .bullets li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    min-width: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    margin-top: 0.5em;
+  }
+
+  .bullets li strong {
+    color: var(--gold);
+    font-weight: 600;
+  }
+
+  /* ─── 3 COLUMN LAYOUT ─── */
+  .cols-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 3%;
+    width: 100%;
+  }
+
+  .col-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(245,197,24,0.15);
+    border-radius: 8px;
+    padding: 5% 4%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .col-card .num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(28px, 3.5vw, 44px);
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .col-card .label {
+    font-size: clamp(11px, 1.3vw, 16px);
+    color: var(--white);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .col-card .desc {
+    font-size: clamp(9px, 1vw, 13px);
+    color: var(--gray);
+    font-weight: 300;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+
+  /* ─── QUOTE STYLE ─── */
+  .quote-block {
+    border-left: 3px solid var(--gold);
+    padding: 2% 4%;
+    background: rgba(245,197,24,0.04);
+    border-radius: 0 8px 8px 0;
+    width: 100%;
+    max-width: 850px;
+  }
+
+  .quote-text {
+    font-size: clamp(14px, 1.8vw, 22px);
+    color: var(--white);
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  /* ─── SIGNAUX ─── */
+  .signal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2%;
+    width: 100%;
+  }
+
+  .signal-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    padding: 3% 3%;
+    font-size: clamp(10px, 1.2vw, 15px);
+    color: #c8d0dc;
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  .signal-item .icon {
+    font-size: clamp(14px, 1.6vw, 20px);
+    min-width: 24px;
+  }
+
+  /* ─── SOLUTION BOX ─── */
+  .solution-box {
+    background: rgba(245,197,24,0.06);
+    border: 1px solid rgba(245,197,24,0.25);
+    border-radius: 10px;
+    padding: 4% 5%;
+    width: 100%;
+    max-width: 860px;
+  }
+
+  .solution-label {
+    font-size: clamp(9px, 1vw, 12px);
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .solution-text {
+    font-size: clamp(13px, 1.6vw, 20px);
+    color: var(--white);
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .solution-text strong { color: var(--gold); font-weight: 600; }
+
+  /* ─── CLOSING SLIDE ─── */
+  .closing-action {
+    background: rgba(245,197,24,0.08);
+    border: 1px solid rgba(245,197,24,0.3);
+    border-radius: 10px;
+    padding: 3% 5%;
+    margin-top: 3%;
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .closing-action p {
+    font-size: clamp(11px, 1.3vw, 16px);
+    color: var(--gold);
+    font-weight: 500;
+    line-height: 1.6;
+  }
+
+  /* ─── LOGO ─── */
+  .logo {
+    position: absolute;
+    bottom: 4%;
+    right: 4%;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(12px, 1.4vw, 18px);
+    color: rgba(245,197,24,0.4);
+    letter-spacing: 0.1em;
+    z-index: 10;
+  }
+
+  .slide-num-badge {
+    position: absolute;
+    top: 4%;
+    right: 4%;
+    font-size: clamp(9px, 1vw, 12px);
+    color: rgba(245,197,24,0.3);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    z-index: 10;
+  }
+
+  /* ─── RED ACCENT ─── */
+  .red { color: var(--red); }
+
+  /* ─── DIVIDER LINE ─── */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: rgba(245,197,24,0.15);
+    margin: 2% 0;
+  }
+
+  /* Thumbnail strip */
+  .thumbs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: var(--slide-w);
+    width: 100%;
+    padding-bottom: 80px;
+  }
+
+  .thumb {
+    width: 80px;
+    height: 45px;
+    border-radius: 3px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    overflow: hidden;
+    font-size: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    transition: border-color 0.2s;
+    background: #0a0e1a;
+  }
+
+  .thumb.active-thumb { border-color: var(--gold); }
+  .thumb:hover { border-color: rgba(245,197,24,0.5); }
+</style>
+</head>
+<body>
+
+<div class="slides-wrapper">
+
+  <!-- SLIDE 1 — Titre -->
+  <div class="slide bg-main active" id="slide-1">
+    <div class="ennemi-number" style="font-size:clamp(120px,22vw,280px);opacity:0.04;">3</div>
+    <div class="slide-inner">
+      <div class="tag">Module 1 — Leçon 2</div>
+      <div class="big-title">Les <span>3 ennemis</span><br>de la cohérence</div>
+      <div class="gold-bar center"></div>
+      <div class="subtitle">Pourquoi tu sabotes tes propres résultats — et comment l'arrêter</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 2 — Intro -->
+  <div class="slide bg-dark" id="slide-2">
+    <div class="slide-inner" style="max-width:900px;">
+      <div class="tag">Avant de commencer</div>
+      <div class="section-title" style="margin-bottom:3%;">Reconnais-toi <span>honnêtement</span></div>
+      <div class="gold-bar center"></div>
+      <div class="quote-block" style="margin-top:3%;">
+        <div class="quote-text">Je vais te décrire des situations très précises. Tu vas te reconnaître dans au moins une d'entre elles. Probablement dans les trois.</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(12px,1.4vw,17px); color:var(--gray); font-weight:300;">Ce n'est pas une critique. C'est un <strong style="color:var(--white);">diagnostic.</strong></div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 3 — Vue d'ensemble -->
+  <div class="slide bg-main" id="slide-3">
+    <div class="slide-inner">
+      <div class="tag">Les 3 ennemis</div>
+      <div class="cols-3" style="margin-top:2%;">
+        <div class="col-card">
+          <div class="num">01</div>
+          <div class="label">L'impulsivité</div>
+          <div class="desc">Agir sans plan, sous l'effet de l'émotion</div>
+        </div>
+        <div class="col-card">
+          <div class="num">02</div>
+          <div class="label">La suranalyse</div>
+          <div class="desc">Trop analyser jusqu'à la paralysie</div>
+        </div>
+        <div class="col-card">
+          <div class="num">03</div>
+          <div class="label">Absence de règles claires</div>
+          <div class="desc">Des décisions subjectives à chaque trade</div>
+        </div>
+      </div>
+      <div style="margin-top:4%; font-size:clamp(11px,1.3vw,16px); color:var(--gray);">Ces trois ennemis ne disparaissent pas avec l'expérience — ils s'adaptent.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 4 — Ennemi #1 Titre -->
+  <div class="slide bg-accent" id="slide-4">
+    <div class="ennemi-number">01</div>
+    <div class="slide-inner left">
+      <div class="tag">Ennemi #1</div>
+      <div class="big-title"><span>L'impul-</span><br>sivité</div>
+      <div class="gold-bar"></div>
+      <div class="subtitle" style="max-width:55%;">Prendre une décision sans que toutes tes conditions soient réunies</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 5 — Ennemi #1 Exemples -->
+  <div class="slide bg-dark" id="slide-5">
+    <div class="slide-inner left" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Ennemi #1 — L'impulsivité</div>
+      <div class="section-title" style="margin-bottom:3%;">À quoi ça <span>ressemble</span></div>
+      <ul class="bullets">
+        <li><strong>Peur de manquer :</strong> le marché bouge fort, tu entres sans plan</li>
+        <li><strong>Revenge trading :</strong> tu viens de perdre, tu veux "récupérer" immédiatement</li>
+        <li><strong>L'ennui :</strong> rien ne se passe, tu "trouves" un setup qui n'existe pas vraiment</li>
+        <li><strong>Suivre les autres :</strong> quelqu'un sur les réseaux prend un trade, tu copies</li>
+      </ul>
+      <div style="margin-top:3%; font-size:clamp(11px,1.2vw,15px); color:var(--gray);">Point commun : la décision est basée sur une <strong style="color:var(--white);">émotion</strong>, pas sur ton plan.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 6 — Ennemi #1 Signaux -->
+  <div class="slide bg-dark" id="slide-6">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Ennemi #1 — Signaux d'alarme</div>
+      <div class="section-title" style="margin-bottom:3%;">Comment le <span>reconnaître</span></div>
+      <div class="signal-grid">
+        <div class="signal-item"><span class="icon">⚠️</span>Tu ne peux pas expliquer clairement pourquoi tu entres en une phrase simple</div>
+        <div class="signal-item"><span class="icon">⚠️</span>Tu "trouves" soudainement un setup après avoir regardé l'écran depuis longtemps</div>
+        <div class="signal-item"><span class="icon">⚠️</span>Tu viens de perdre et tu veux te refaire rapidement</div>
+        <div class="signal-item"><span class="icon">⚠️</span>Tu entres parce que quelqu'un d'autre l'a fait — pas parce que c'est dans ton plan</div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 7 — Ennemi #1 Coût réel -->
+  <div class="slide bg-main" id="slide-7">
+    <div class="slide-inner left" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Ennemi #1 — Le coût réel</div>
+      <div class="section-title" style="margin-bottom:3%;">Ce que ça coûte <span>vraiment</span></div>
+      <ul class="bullets">
+        <li><strong>De la confiance :</strong> même un trade impulsif gagnant renforce une mauvaise habitude</li>
+        <li><strong>De la clarté :</strong> tes données ne veulent plus rien dire si tu mélanges trades planifiés et impulsifs</li>
+        <li><strong>De l'énergie mentale :</strong> décider sous stress épuise — et la fatigue mène à encore plus d'impulsivité</li>
+      </ul>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 8 — Ennemi #1 Solution -->
+  <div class="slide bg-dark" id="slide-8">
+    <div class="slide-inner">
+      <div class="tag">Ennemi #1 — La solution</div>
+      <div class="section-title" style="margin-bottom:3%;">Un <span>système</span>, pas de la volonté</div>
+      <div class="gold-bar center"></div>
+      <div class="solution-box" style="margin-top:3%;">
+        <div class="solution-label">Principe clé</div>
+        <div class="solution-text">La discipline ne vient pas de la force mentale. Elle vient des <strong>systèmes que tu mets en place.</strong> Une checklist d'entrée claire élimine les décisions subjectives.</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.2vw,15px); color:var(--gray);">→ On construit cette checklist ensemble dans le <strong style="color:var(--white);">Module 3</strong></div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 9 — Ennemi #2 Titre -->
+  <div class="slide bg-accent" id="slide-9">
+    <div class="ennemi-number">02</div>
+    <div class="slide-inner left">
+      <div class="tag">Ennemi #2</div>
+      <div class="big-title"><span>La sur-</span><br>analyse</div>
+      <div class="gold-bar"></div>
+      <div class="subtitle" style="max-width:55%;">Tellement d'information que tu ne peux plus prendre de décision claire</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 10 — Ennemi #2 Exemple -->
+  <div class="slide bg-dark" id="slide-10">
+    <div class="slide-inner left" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Ennemi #2 — La suranalyse</div>
+      <div class="section-title" style="margin-bottom:3%;">Le <span>scénario classique</span></div>
+      <ul class="bullets">
+        <li>Tu vois un setup valide sur le <strong>1 heure</strong></li>
+        <li>Tu passes au <strong>4 heures</strong> pour confirmer — léger doute</li>
+        <li>Tu vérifies le <strong>daily</strong> — hésitation</li>
+        <li>Tu regardes les <strong>news économiques</strong> du jour</li>
+        <li>Tu attends… et tu <strong>rates l'entrée</strong></li>
+      </ul>
+      <div style="margin-top:3%; font-size:clamp(11px,1.2vw,15px); color:var(--gray);">Résultat : tu avais raison sur le trade. Tu ne l'as pas pris.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 11 — Ennemi #2 Signaux -->
+  <div class="slide bg-dark" id="slide-11">
+    <div class="slide-inner" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Ennemi #2 — Signaux d'alarme</div>
+      <div class="section-title" style="margin-bottom:3%;">Tu <span>suranalyses</span> si...</div>
+      <div class="signal-grid">
+        <div class="signal-item"><span class="icon">⚠️</span>Tu passes plus de temps à analyser qu'à trader réellement</div>
+        <div class="signal-item"><span class="icon">⚠️</span>Tu changes d'avis sur un trade plusieurs fois en quelques minutes</div>
+        <div class="signal-item"><span class="icon">⚠️</span>Tu ajoutes régulièrement de nouveaux indicateurs pour "clarifier"</div>
+        <div class="signal-item"><span class="icon">⚠️</span>Tu rates des trades que tu avais identifiés correctement à force d'attendre</div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 12 — Ennemi #2 Paradoxe -->
+  <div class="slide bg-main" id="slide-12">
+    <div class="slide-inner">
+      <div class="tag">Ennemi #2 — Le paradoxe</div>
+      <div class="section-title" style="margin-bottom:3%;">Plus tu analyses,<br><span>plus tu doutes</span></div>
+      <div class="gold-bar center"></div>
+      <div class="quote-block" style="margin-top:3%;">
+        <div class="quote-text">La suranalyse vient de la peur de se tromper. Cette peur pousse à chercher une confirmation de plus — qui n'arrive jamais vraiment. En trading, il n'y a jamais de certitude à 100%.</div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 13 — Ennemi #2 Solution -->
+  <div class="slide bg-dark" id="slide-13">
+    <div class="slide-inner">
+      <div class="tag">Ennemi #2 — La solution</div>
+      <div class="section-title" style="margin-bottom:3%;">La <span>simplicité</span> volontaire</div>
+      <div class="gold-bar center"></div>
+      <div class="solution-box" style="margin-top:3%;">
+        <div class="solution-label">Principe clé</div>
+        <div class="solution-text">Décide à l'avance exactement ce dont tu as besoin pour entrer — et <strong>rien de plus.</strong> Un contexte clair. Un niveau précis. Une condition d'entrée. Si les trois sont là, tu entres.</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.2vw,15px); color:var(--gray);">→ On construit ce cadre dans les <strong style="color:var(--white);">Modules 2 et 3</strong></div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 14 — Ennemi #3 Titre -->
+  <div class="slide bg-accent" id="slide-14">
+    <div class="ennemi-number">03</div>
+    <div class="slide-inner left">
+      <div class="tag">Ennemi #3 — Le plus dangereux</div>
+      <div class="big-title"><span>Absence</span><br>de règles<br>claires</div>
+      <div class="gold-bar"></div>
+      <div class="subtitle" style="max-width:55%;">Il rend les deux premiers ennemis inévitables</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 15 — Ennemi #3 Test -->
+  <div class="slide bg-dark" id="slide-15">
+    <div class="slide-inner">
+      <div class="tag">Ennemi #3 — Le test</div>
+      <div class="section-title" style="margin-bottom:3%;">Peux-tu répondre à <span>ces questions</span> ?</div>
+      <ul class="bullets" style="max-width:750px;">
+        <li>À quel niveau <strong>exactement</strong> tu entres sur un trade ?</li>
+        <li>Où est ton stop loss et <strong>comment tu le calcules</strong> ?</li>
+        <li>Dans quel <strong>contexte de marché</strong> tu prends ce type de trade ?</li>
+        <li>Quel est ton objectif et <strong>comment tu le détermines</strong> ?</li>
+        <li><strong>Quand tu ne trades pas</strong> — quelles sont tes conditions d'absence ?</li>
+      </ul>
+      <div style="margin-top:3%; font-size:clamp(12px,1.4vw,17px); color:var(--gray);">Si tu hésites sur l'une de ces réponses — tes règles ne sont pas encore assez claires.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 16 — Ennemi #3 Danger -->
+  <div class="slide bg-main" id="slide-16">
+    <div class="slide-inner left" style="justify-content:flex-start; padding-top:5%;">
+      <div class="tag">Ennemi #3 — Pourquoi c'est dangereux</div>
+      <div class="section-title" style="margin-bottom:3%;">La <span>négociation</span> intérieure</div>
+      <ul class="bullets">
+        <li>Sans règles précises, chaque trade devient une <strong>décision subjective</strong></li>
+        <li>Sous pression, tu vas interpréter tes règles pour <strong>justifier ce que tu veux déjà faire</strong></li>
+        <li>"Ça ressemble assez à mon setup" devient ta règle d'entrée par défaut</li>
+        <li>Dans cette négociation avec toi-même, c'est presque toujours <strong>l'émotion qui gagne</strong></li>
+      </ul>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 17 — Cercle vicieux -->
+  <div class="slide bg-dark" id="slide-17">
+    <div class="slide-inner">
+      <div class="tag">Ennemi #3 — Le cercle vicieux</div>
+      <div class="section-title" style="margin-bottom:4%;">Pourquoi ça dure <span>des années</span></div>
+      <div style="display:flex; align-items:center; gap:2%; width:100%; max-width:900px; font-size:clamp(10px,1.2vw,15px);">
+        <div class="col-card" style="flex:1; text-align:center;">
+          <div style="color:var(--white); font-weight:500;">Pas de règles claires</div>
+        </div>
+        <div style="color:var(--gold); font-size:clamp(16px,2vw,24px);">→</div>
+        <div class="col-card" style="flex:1; text-align:center;">
+          <div style="color:var(--white); font-weight:500;">Décisions subjectives</div>
+        </div>
+        <div style="color:var(--gold); font-size:clamp(16px,2vw,24px);">→</div>
+        <div class="col-card" style="flex:1; text-align:center;">
+          <div style="color:var(--white); font-weight:500;">Résultats incohérents</div>
+        </div>
+        <div style="color:var(--gold); font-size:clamp(16px,2vw,24px);">→</div>
+        <div class="col-card" style="flex:1; text-align:center;">
+          <div style="color:var(--gold); font-weight:500;">Nouvelle stratégie</div>
+        </div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.2vw,15px); color:var(--gray);">Beaucoup de traders restent dans ce cercle pendant des années sans jamais corriger le vrai problème.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 18 — Ennemi #3 Solution -->
+  <div class="slide bg-dark" id="slide-18">
+    <div class="slide-inner">
+      <div class="tag">Ennemi #3 — La solution</div>
+      <div class="section-title" style="margin-bottom:3%;">Écrire tes règles — <span>vraiment</span></div>
+      <div class="gold-bar center"></div>
+      <div class="solution-box" style="margin-top:3%;">
+        <div class="solution-label">Principe clé</div>
+        <div class="solution-text">Pas dans ta tête. Sur papier ou dans un document. De façon <strong>précise, concrète, sans ambiguïté.</strong> C'est un document vivant qu'on affine — mais il faut un point de départ.</div>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(11px,1.2vw,15px); color:var(--gray);">→ C'est exactement ce qu'on va construire ensemble dans ce programme, module par module.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 19 — Lien entre les 3 -->
+  <div class="slide bg-main" id="slide-19">
+    <div class="slide-inner">
+      <div class="tag">La connexion</div>
+      <div class="section-title" style="margin-bottom:3%;">Ces 3 ennemis sont <span>liés</span></div>
+      <div class="quote-block">
+        <div class="quote-text">L'absence de règles claires favorise l'impulsivité et la suranalyse. L'impulsivité et la suranalyse renforcent le sentiment que "ça ne marche pas" — et poussent à changer de stratégie sans jamais corriger le vrai problème.</div>
+      </div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+  <!-- SLIDE 20 — Action -->
+  <div class="slide bg-dark" id="slide-20">
+    <div class="slide-inner">
+      <div class="tag">Avant la prochaine leçon</div>
+      <div class="big-title" style="font-size:clamp(32px,5.5vw,70px);">Ton <span>action</span><br>maintenant</div>
+      <div class="gold-bar center"></div>
+      <div class="closing-action">
+        <p>Prends 5 minutes. Écris lequel de ces trois ennemis est ton plus grand défi en ce moment.</p>
+        <p style="margin-top:8px; color:var(--white);">Sois honnête avec toi-même. Ce n'est pas pour moi — c'est pour <strong style="color:var(--gold);">toi.</strong></p>
+        <p style="margin-top:8px;">La prise de conscience, c'est toujours la première étape.</p>
+      </div>
+      <div style="margin-top:3%; font-size:clamp(12px,1.4vw,17px); color:var(--gray);">On se retrouve dans la prochaine leçon.</div>
+    </div>
+    <div class="logo">TRADER MOINS, TRADER MIEUX</div>
+  </div>
+
+</div>
+
+<!-- THUMBNAILS -->
+<div class="thumbs" id="thumbs"></div>
+
+<!-- NAV -->
+<div class="nav">
+  <button onclick="prevSlide()">← Précédent</button>
+  <span class="slide-counter" id="counter">1 / 20</span>
+  <button onclick="nextSlide()">Suivant →</button>
+</div>
+
+<script>
+  let current = 1;
+  const total = 20;
+
+  const titles = [
+    "Titre","Intro","Vue d'ensemble","Ennemi #1","Exemples","Signaux","Coût réel","Solution","Ennemi #2","Scénario","Signaux","Paradoxe","Solution","Ennemi #3","Le test","Danger","Cercle vicieux","Solution","Lien","Action"
+  ];
+
+  function goTo(n) {
+    document.querySelector('.slide.active')?.classList.remove('active');
+    document.querySelector('.thumb.active-thumb')?.classList.remove('active-thumb');
+    current = n;
+    document.getElementById('slide-' + n).classList.add('active');
+    document.getElementById('thumb-' + n).classList.add('active-thumb');
+    document.getElementById('counter').textContent = n + ' / ' + total;
+    document.getElementById('thumb-' + n).scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  }
+
+  function nextSlide() { if (current < total) goTo(current + 1); }
+  function prevSlide() { if (current > 1) goTo(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') nextSlide();
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') prevSlide();
+  });
+
+  // Build thumbnails
+  const thumbsEl = document.getElementById('thumbs');
+  for (let i = 1; i <= total; i++) {
+    const t = document.createElement('div');
+    t.className = 'thumb' + (i === 1 ? ' active-thumb' : '');
+    t.id = 'thumb-' + i;
+    t.textContent = i + '. ' + titles[i-1];
+    t.onclick = () => goTo(i);
+    thumbsEl.appendChild(t);
+  }
+</script>
+</body>
+</html>
